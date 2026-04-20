@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BNCT 전자결재</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:100vh;}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+.header{background:linear-gradient(135deg,#003087,#1565c0);color:white;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-size:22px;font-weight:900;letter-spacing:3px;}
+.header-sub{font-size:12px;opacity:.75;margin-top:2px;}
+.status-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;}
+
+.info-bar{background:white;border-bottom:2px solid #e0e7ef;padding:14px 24px;display:flex;gap:24px;flex-wrap:wrap;font-size:13px;}
+.info-item strong{color:#003087;}
+
+.container{max-width:860px;margin:24px auto;padding:0 16px 60px;}
+
+.step-bar{display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid #dde3ed;}
+.step{flex:1;padding:10px 8px;text-align:center;font-size:11px;font-weight:700;background:#f5f7fa;color:#9aa5b4;border-right:1px solid #dde3ed;}
+.step:last-child{border-right:none;}
+.step.done{background:#e8f4fd;color:#1565c0;}
+.step.active{background:#003087;color:white;}
+
+.card{background:white;border-radius:10px;border:1px solid #e0e7ef;margin-bottom:16px;overflow:hidden;}
+.card-header{padding:12px 18px;font-size:13px;font-weight:700;color:white;display:flex;align-items:center;gap:8px;}
+.card-header.s1{background:#1a3a6b;}
+.card-header.s2{background:#1a3a6b;}
+.card-header.s3{background:#1565c0;}
+.card-header.s4{background:#0d47a1;}
+.card-header.extra{background:#2e7d32;}
+.card-header.pledge{background:#37474f;}
+.badge{background:rgba(255,255,255,.25);padding:2px 8px;border-radius:12px;font-size:10px;}
+.badge.editable{background:#ffd54f;color:#333;}
+
+.card-body{padding:16px 18px;}
+.ro-label{display:inline-block;background:#e3f2fd;color:#1565c0;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;}
+.ed-label{display:inline-block;background:#fff9c4;color:#f57f17;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;}
+
+table.pt{width:100%;border-collapse:collapse;font-size:12.5px;}
+table.pt th{background:#f0f4f8;padding:8px 12px;font-weight:700;border:1px solid #dde3ed;width:120px;text-align:left;white-space:nowrap;}
+table.pt td{padding:8px 12px;border:1px solid #dde3ed;}
+table.pt input{width:100%;border:none;outline:none;font-size:12.5px;font-family:inherit;background:transparent;}
+table.pt input[readonly]{background:#f8faff;color:#333;}
+
+.section-title{font-size:12.5px;font-weight:700;color:white;padding:8px 14px;border-radius:4px;margin:12px 0 6px;}
+.s3-color{background:#1565c0;}
+.s4-color{background:#0d47a1;}
+
+.checklist{display:flex;flex-direction:column;gap:5px;font-size:12px;padding:6px 0;}
+.checklist label{display:flex;align-items:flex-start;gap:8px;cursor:pointer;line-height:1.5;}
+.checklist label input{margin-top:3px;flex-shrink:0;}
+.checklist label.ro{cursor:default;}
+
+.sigrow{display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:8px;margin-top:10px;padding:10px;background:#f8faff;border-radius:8px;border:1px solid #dde3ed;}
+.si{display:flex;flex-direction:column;gap:4px;}
+.si-lbl{font-size:11px;font-weight:700;color:#666;}
+.si input{border:1px solid #dde3ed;border-radius:5px;padding:5px 8px;font-size:12px;font-family:inherit;width:100%;}
+.si input[readonly]{background:#f0f4f8;color:#1565c0;font-weight:700;}
+
+.sigpad{border:2px dashed #bbb;border-radius:8px;background:#fafafa;position:relative;cursor:pointer;}
+.sigpad.ro{cursor:default;border-style:solid;background:#f0f4f8;}
+.sigpad canvas{display:block;border-radius:6px;}
+.sighint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa;pointer-events:none;}
+.sig-clear{position:absolute;top:4px;right:4px;background:#ff5252;color:white;border:none;border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer;z-index:10;}
+
+/* 서명 확대 모달 */
+.sig-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;}
+.sig-modal.show{display:flex;}
+.sig-modal-inner{background:white;border-radius:12px;padding:20px;width:92vw;max-width:520px;}
+.sig-modal-inner canvas{border:1px solid #ddd;border-radius:8px;width:100%;height:200px;}
+.sig-modal-btns{display:flex;gap:10px;margin-top:14px;}
+.sig-modal-btns button{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-clear{background:#f5f5f5;color:#333;}
+.btn-ok{background:#003087;color:white;}
+
+.submit-area{position:fixed;bottom:0;left:0;right:0;background:white;border-top:2px solid #e0e7ef;padding:14px 24px;display:flex;gap:12px;justify-content:flex-end;z-index:50;}
+.btn-submit{background:#003087;color:white;border:none;padding:13px 32px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:1px;}
+.btn-submit:disabled{background:#ccc;cursor:not-allowed;}
+.btn-submit:hover:not(:disabled){background:#1565c0;}
+
+.done-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;}
+.done-screen.show{display:flex;}
+.done-icon{font-size:64px;margin-bottom:16px;}
+.done-title{font-size:22px;font-weight:900;color:#003087;margin-bottom:8px;}
+.done-sub{font-size:14px;color:#666;}
+
+.loading{display:none;position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:9998;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.loading.show{display:flex;}
+.loading-spinner{width:48px;height:48px;border:5px solid #e0e7ef;border-top-color:#003087;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-msg{font-size:14px;font-weight:700;color:#003087;}
+
+.alert{padding:10px 14px;border-radius:6px;font-size:12.5px;margin:8px 0;}
+.alert-info{background:#e3f2fd;border-left:4px solid #1565c0;color:#0d47a1;}
+.alert-warn{background:#fff3e0;border-left:4px solid #f57c00;color:#e65100;}
+.alert-done{background:#e8f5e9;border-left:4px solid #2e7d32;color:#1b5e20;}
+.alert-lock{background:#fce4ec;border-left:4px solid #c62828;color:#b71c1c;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">BNCT</div>
+    <div class="header-sub">자산관리팀 안전서류 전자결재</div>
+  </div>
+  <div class="status-badge" id="statusBadge">불러오는 중...</div>
+</div>
+
+<div class="info-bar" id="infoBar" style="display:none;">
+  <span>공사명: <strong id="IP">-</strong></span>
+  <span>업체명: <strong id="IC">-</strong></span>
+  <span>작업인원: <strong id="IW">-</strong></span>
+  <span>제출: <strong id="ID">-</strong></span>
+</div>
+
+<div class="container">
+  <div class="step-bar" id="stepBar">
+    <div class="step" id="step1">1단계<br>외주작업자</div>
+    <div class="step" id="step2">2단계<br>Section 3</div>
+    <div class="step" id="step3">3단계<br>Section 4</div>
+    <div class="step" id="step4">4단계<br>완료</div>
+  </div>
+
+  <div id="formWrap"></div>
+  <div class="done-screen" id="doneScreen">
+    <div class="done-icon">✅</div>
+    <div class="done-title" id="doneTitle">서명이 완료되었습니다</div>
+    <div class="done-sub" id="doneSub">이 창을 닫아도 됩니다.</div>
+  </div>
+</div>
+
+<div class="submit-area" id="submitArea" style="display:none;">
+  <button class="btn-submit" id="btnSubmit" onclick="doSign()">서명 저장 및 완료 →</button>
+</div>
+
+<!-- 서명 확대 모달 -->
+<div class="sig-modal" id="sigModal">
+  <div class="sig-modal-inner">
+    <div style="font-size:14px;font-weight:700;margin-bottom:12px;">서명하기</div>
+    <canvas id="bigCanvas" width="460" height="180"></canvas>
+    <div class="sig-modal-btns">
+      <button class="btn-clear" onclick="clearBigSig()">지우기</button>
+      <button class="btn-ok" onclick="saveBigSig()">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading" id="loadingEl">
+  <div class="loading-spinner"></div>
+  <div class="loading-msg" id="loadingMsg">불러오는 중...</div>
+</div>
+
+<script>
+var TOKEN = new URLSearchParams(location.search).get('token');
+var ROLE = new URLSearchParams(location.search).get('role'); // s3 | s4 | active
+var PD = null;
+var now = new Date(), p2 = n=>String(n).padStart(2,'0');
+var today = now.getFullYear()+'-'+p2(now.getMonth()+1)+'-'+p2(now.getDate());
+var nowT = p2(now.getHours())+':'+p2(now.getMinutes());
+var activeBigPad = null; // {canvasId, ctx}
+var bigCtx = null, bigDrawing = false, bigLx = 0, bigLy = 0;
+
+function ld(show, msg) {
+  var el = document.getElementById('loadingEl');
+  el.classList.toggle('show', show);
+  if (msg) document.getElementById('loadingMsg').textContent = msg;
+}
+function gv(id) { var e=document.getElementById(id); return e?e.value:''; }
+
+// ── 데이터 로드 ──────────────────────────────────────
+async function init() {
+  if (!TOKEN) { document.getElementById('formWrap').innerHTML = '<div class="alert alert-lock">유효하지 않은 링크입니다.</div>'; return; }
+  ld(true, '서류 불러오는 중...');
+  try {
+    var res = await fetch('/api/get-permit?token='+TOKEN);
+    var data = await res.json();
+    ld(false);
+    if (!res.ok || !data.permit) { document.getElementById('formWrap').innerHTML = '<div class="alert alert-lock">'+(data.error||'서류를 찾을 수 없습니다.')+'</div>'; return; }
+    PD = data.permit;
+    renderAll();
+  } catch(e) { ld(false); document.getElementById('formWrap').innerHTML = '<div class="alert alert-lock">네트워크 오류: '+e.message+'</div>'; }
+}
+
+function renderAll() {
+  var p = PD;
+  var f = {}; try { f = JSON.parse(p.form_fields||'{}'); } catch(e) {}
+  var mgrs = []; try { mgrs = JSON.parse(p.managers||'[]'); } catch(e) {}
+  var forms = []; try { forms = JSON.parse(p.forms||'[]'); } catch(e) {}
+  var mgr3 = mgrs.map(m=>m.name).join(', ');
+  var status = p.status || 'pending_s3';
+
+  // 정보바
+  document.getElementById('IP').textContent = p.project_name||'-';
+  document.getElementById('IC').textContent = p.company_name||'-';
+  document.getElementById('IW').textContent = (p.worker_count||'-')+'명';
+  document.getElementById('ID').textContent = p.submit_date||'-';
+  document.getElementById('infoBar').style.display = 'flex';
+
+  // 상태 배지
+  var badges = {
+    'pending_s3':'⏳ Section 3 서명 대기',
+    'pending_s4':'⏳ Section 4 서명 대기',
+    'active':'✅ 승인 완료 (진행 중)',
+    'completed':'🏁 최종 완료'
+  };
+  document.getElementById('statusBadge').textContent = badges[status]||status;
+
+  // 스텝바
+  var steps = ['step1','step2','step3','step4'];
+  var activeStep = status==='pending_s3'?1:status==='pending_s4'?2:status==='active'||status==='completed'?3:3;
+  steps.forEach((id,i)=>{
+    var el = document.getElementById(id);
+    el.className = 'step'+(i<activeStep?' done':i===activeStep?' active':'');
+  });
+
+  // 접근 권한 체크
+  var canEdit = false;
+  if (ROLE==='s3' && status==='pending_s3') canEdit = true;
+  if (ROLE==='s4' && status==='pending_s4') canEdit = true;
+  if (ROLE==='active' && (status==='active'||status==='completed')) canEdit = true;
+
+  if (!canEdit && ROLE) {
+    var msgs = {
+      's3': status==='pending_s3'?null:'이미 서명이 완료된 단계이거나 아직 이전 단계가 완료되지 않았습니다.',
+      's4': status==='pending_s4'?null:'Section 3 서명이 완료된 후 접근 가능합니다.',
+      'active': (status==='active'||status==='completed')?null:'Section 4 승인 후 접근 가능합니다.'
+    };
+    if (msgs[ROLE]) {
+      document.getElementById('formWrap').innerHTML = '<div class="alert alert-lock">🔒 '+msgs[ROLE]+'</div>';
+      renderReadOnly(forms, f, p, mgr3);
+      return;
+    }
+  }
+
+  var html = '';
+  var proj = p.project_name||'', comp = p.company_name||'';
+
+  // ── 안전서약서들 (읽기전용) ──
+  forms.filter(fm=>fm.type==='pledge').forEach(fm=>{
+    html += buildPledge(fm, f, p, true);
+  });
+
+  // ── 작업허가서 ──
+  var hasPermit = forms.some(fm=>fm.type==='permit') || forms.length===0;
+  if (hasPermit) {
+    html += buildPermit(f, p, mgr3, ROLE, status, canEdit);
+  }
+
+  // ── 추가양식들 ──
+  forms.filter(fm=>['hotwork','height','electric','lifting'].includes(fm.type)).forEach(fm=>{
+    html += buildExtra(fm, f, true);
+  });
+
+  document.getElementById('formWrap').innerHTML = html;
+
+  // 서명패드 초기화
+  setTimeout(()=>{
+    document.querySelectorAll('.sigpad:not(.ro) canvas').forEach(cv=>{ initPad(cv); });
+    // 저장된 서명 이미지 복원
+    restoreSigs(p);
+  }, 50);
+
+  // 제출 버튼
+  if (canEdit && ROLE !== 'active') {
+    document.getElementById('submitArea').style.display = 'flex';
+  } else if (ROLE === 'active') {
+    document.getElementById('submitArea').style.display = 'flex';
+    document.getElementById('btnSubmit').textContent = '저장하기';
+  }
+}
+
+function restoreSigs(p) {
+  // Section 2 서명 (읽기전용 이미지)
+  var f = {}; try { f = JSON.parse(p.form_fields||'{}'); } catch(e) {}
+  if (f.sig2_img) drawSigImage('sig-s2', f.sig2_img);
+  // 안전서약서 서명들
+  var forms = []; try { forms = JSON.parse(p.forms||'[]'); } catch(e) {}
+  forms.filter(fm=>fm.type==='pledge').forEach(fm=>{
+    var sigKey = 'sig_pledge_'+fm.worker;
+    if (f[sigKey]) drawSigImage('sig-pledge-'+fm.worker, f[sigKey]);
+  });
+  // S3,S4 서명 복원
+  if (p.s3_sig) drawSigImage('sig-s3', p.s3_sig);
+  if (p.s4_sig) drawSigImage('sig-s4', p.s4_sig);
+}
+
+function drawSigImage(canvasId, dataUrl) {
+  var cv = document.getElementById(canvasId);
+  if (!cv) return;
+  var img = new Image();
+  img.onload = ()=>{ cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height); };
+  img.src = dataUrl;
+}
+
+// ── 안전서약서 빌더 ──────────────────────────────────
+function buildPledge(fm, f, p, ro) {
+  var wi = fm.worker||1;
+  var items = ['현장 출입 시 안전보호구(안전모, 안전조끼, 안전화 등)를 철저히 착용한다.',
+    '작업간에 핸드폰, 이어폰 등 기타 개인 전자제품 사용을 금지한다.',
+    '차량은 제한속도를 준수하고, 지정된 도로만을 주행한다. (야드 내 30km/h, 안벽 내 15km/h 이내)',
+    '중량물 및 작업 중인 컨테이너 아래 등 위험지역에 위치하지 않는다.',
+    '장비 주행로에는 주차 및 보행을 금지한다.',
+    '작업 전 안전 조회 및 제반 안전교육시에는 반드시 참석토록 한다.',
+    '운행 전 경고장치 이상유무 확인 및 경고등을 점등한다.',
+    '보행시는 보행자 통로를 사용하며 작업 중 또는 장비내에서 흡연하지 않는다.',
+    '운전중 안전벨트 착용 및 음주, 졸음 운전을 하지 않는다.',
+    '출입이 금지된 구역이나 본인의 작업 구역 이외에는 출입하지 않는다.',
+    '휴게시간에는 지정된 휴게장소에서 충분한 휴식을 취한다.',
+    '고소, 추락, 낙하물, 충돌 위험이 있는 장소에는 작업할 때 상급관리자의 허가 및 감독하에 작업을 안전하게 실시한다.',
+    '화기작업 전 작업역 내 관계자외 출입을 금지하고 표지판을 설치한다.',
+    '화기작업 중 용접불티등에 의한 화재가 발생하지 않도록 비산불티차단막 설치 및 소화기를 비치한다.',
+    '작업 전 및 완료 후 해당 담당자에게 연락을 취하여 완료 여부를 확인 받는다.',
+    '작업 중 특이사항 발생 시 즉각 해당 담당자에게 보고 및 안전조치 한다.'];
+
+  var nameVal = f['pledge_name_'+wi]||'';
+  var rankVal = f['pledge_rank_'+wi]||'';
+  var contactVal = f['pledge_contact_'+wi]||'';
+
+  return `<div class="card">
+    <div class="card-header pledge">
+      <span>📋 안전서약서</span>
+      <span class="badge">작업자 ${wi} / ${p.worker_count}</span>
+      <span class="badge">외주작업자 작성완료</span>
+    </div>
+    <div class="card-body">
+      <div style="text-align:center;font-size:18px;font-weight:900;letter-spacing:4px;padding:12px 0;border-bottom:2px solid #000;margin-bottom:12px;">안 전 서 약 서</div>
+      <div style="font-size:12px;line-height:1.8;margin-bottom:12px;">상기 본인은 BNCT 터미널에 근무함에 있어 본인과 동료 근로자의 생명과 건강 그리고 가정의 평화와 건강하고 안전한 터미널 조성을 위하여 아래 준수 사항을 철저히 이행하여 산업재해를 예방하는데 최선을 다할 것을 서약합니다.</div>
+      <div style="text-align:center;font-weight:900;font-size:13px;padding:6px 0;border-top:2px solid #000;border-bottom:2px solid #000;letter-spacing:3px;margin-bottom:10px;">◈ 작업자 준수 사항 ◈</div>
+      <table class="pt" style="margin-bottom:10px;">
+        ${items.map((t,i)=>`<tr ${i>=16?'style="background:#fff3e0;"':''}><th style="width:30px;text-align:center;">${i+1}</th><td>${t}</td></tr>`).join('')}
+        <tr style="background:#fff3e0;"><th style="text-align:center;">17</th><td><strong>안전조치 미비로 인하여 현장 관리감독자 및 안전담당자의 작업중단 및 개선요청 시 즉각 이행한다.</strong></td></tr>
+        <tr style="background:#fff3e0;"><th style="text-align:center;">18</th><td><strong>*무관용의 법칙* 안전수칙 위반 시 경고장 발부 및 터미널 출입금지 조치한다. (1회 적발시: 경고, 2회 적발시: 출입금지 3개월)</strong></td></tr>
+      </table>
+      <div style="font-size:12px;font-weight:700;text-align:center;padding:8px;border:1px solid #ccc;background:#fafafa;margin-bottom:10px;">
+        상기 본인은 위 준수사항을 성실하게 이행하겠으며 본인의 과실로 인한 사고 발생 시<br>책임질것을 서약합니다. 안전을 최우선으로 생각하며 안전하게 작업하겠습니다.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border:1px solid #ccc;font-size:12px;margin-bottom:8px;">
+        <div style="padding:6px 10px;border-right:1px solid #ccc;"><div style="font-weight:700;">공사명</div><div>${p.project_name||''}</div></div>
+        <div style="padding:6px 10px;border-right:1px solid #ccc;"><div style="font-weight:700;">소 속</div><div>${p.company_name||''}</div></div>
+        <div style="padding:6px 10px;border-right:1px solid #ccc;"><div style="font-weight:700;">직 위</div><div>${rankVal}</div></div>
+        <div style="padding:6px 10px;"><div style="font-weight:700;">연락처</div><div>${contactVal}</div></div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;border:1px solid #ccc;padding:6px 10px;font-size:12px;">
+        <div style="font-weight:700;">성 명:</div>
+        <div style="flex:1;">${nameVal}</div>
+        <div style="font-weight:700;">(인)</div>
+        <div class="sigpad ro" style="width:140px;height:52px;">
+          <canvas id="sig-pledge-${wi}" width="140" height="52"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── 작업허가서 빌더 ──────────────────────────────────
+function buildPermit(f, p, mgr3, role, status, canEdit) {
+  var i2=['본인은 위험성 평가를 비롯하여 본 작업 활동과 관련하여 필요한 관리 양식들을 검토하였다.','본인은, 조치가 적절히 이루어졌는지 확실히 하기 위해 관계자와 협의하였다.','본인은, 첨부된 위험성 평가 및 해당 관리 양식에 따라 본 작업 활동을 조정 및 관리할 능력이 있다.','본인은 작업자 및 작업에 영향을 받는 사람의 건강 및 안전을 확보하기 위해 필요한 모든 조치를 취할것이다.','본인은, 작업 수행자가 위험성 평가 및 각 관리 양식은 물론 아래 Section 5 의 지시사항에 대한 설명을 들었고 해당 내용들을 이해했음을 확인하여야 한다.','본인은, 작업 활동 전체에 걸쳐 위험요소를 관찰하고 관리하여야 한다.','본인은, 당 작업 허가 승인 담당자에게 본 허가서를 검토하고, 등록 및 번호를 부여하도록 요청하는 바이다.'];
+  var i3=['본인은, 위험성 평가 및 필요한 관리 양식을 포함하여 관련된 모든 문서들의 내용을 검토하였으며 작업 업체/작업자에게 의견을 제시하였다.','본인은, 작업 업체/작업자를 담당하는 자로서, 작업 방식과 제안된 관리방안들이 시행되는 것을 모니터링하여 BNCT 터미널 안전 기준이 달성될 수 있도록 할 것이다.','본인은, 해당 작업 구역의 관련자에게 작업 시행 구간, 작업 업체/작업자가 완결해야 할 모든 작업 내역, 작업 관리감독 및 강화를 위해 수립된 절차들에 대한 정보를 알려주었다.'];
+  var i4=['본인은, 위험성 평가를 비롯하여 필요한 관리 양식을 포함한 모든 관련 문서 내용을 검토하였다.','본인은 당 작업 허가서를 등록하고, 작업 번호를 부여하였으며, 관련된 모든 문서 상에 해당 작업 번호를 기입하였다.'];
+
+  var s3Done = !!p.s3_signed_at;
+  var s4Done = !!p.s4_signed_at;
+
+  // S5~10 데이터
+  var s5 = {}; try { s5 = JSON.parse(p.s5_to_s10||'{}'); } catch(e) {}
+
+  var canS3 = role==='s3' && status==='pending_s3';
+  var canS4 = role==='s4' && status==='pending_s4';
+  var canActive = role==='active' && (status==='active'||status==='completed');
+
+  function roChk(t) { return `<label class="ro"><input type="checkbox" checked disabled> <span>${t}</span></label>`; }
+  function edChk(id, t, checked) { return `<label><input type="checkbox" id="${id}"${checked?' checked':''}> <span>${t}</span></label>`; }
+
+  var s2Checks = []; try { s2Checks = JSON.parse(f.s2_checks||'[]'); } catch(e) {}
+  var s3Checks = []; try { s3Checks = JSON.parse(p.s3_checks||'[]'); } catch(e) {}
+
+  return `<div class="card">
+    <div class="card-header s1">
+      <span>📄 작업허가서 양식</span>
+      <span class="badge">Page 1 of 2</span>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+        <div style="border:1px solid #999;display:flex;font-size:12px;">
+          <div style="background:#f0f0f0;padding:4px 10px;font-weight:700;border-right:1px solid #999;">작업허가 번호</div>
+          <div style="padding:4px 10px;">${f.permitNo||''}</div>
+        </div>
+      </div>
+      <div style="border:1px solid #ccc;padding:6px 10px;font-size:12px;margin-bottom:10px;">본 양식은 상세 명시된 <strong>고위험군 작업</strong>에 대한 승인 및 전달 사항 등을 관리하기 위한 것이다.</div>
+
+      <div style="background:#1a3a6b;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin-bottom:6px;">Section 1: 일반 사항 <span class="ro-label">외주작업자 작성완료</span></div>
+      <table class="pt" style="margin-bottom:10px;">
+        <tr><th>작업명</th><td>${f['s1-work']||''}</td></tr>
+        <tr><th>작업 장소</th><td>${f['s1-place']||''}</td></tr>
+        <tr><th>작업 업체</th><td>${f['s1-company']||p.company_name||''}</td></tr>
+        <tr><th>예상 작업 기간</th><td>${f['s1-from']||''} 부터 ${f['s1-to']||''} 까지</td></tr>
+      </table>
+
+      <div style="border:1px solid #ccc;padding:8px 10px;font-size:12px;margin-bottom:10px;">
+        <strong>고위험군 작업:</strong>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-top:6px;">
+          ${['화기 작업','토공/굴착 작업','밀폐공간출입작업','설비/장비 격리','고소 작업','기계적 인양 작업','고압 스위치 접근 및 시험 작업 허가','전기 유지보수작업'].map(t=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;"><input type="checkbox" disabled> ${t}</label>`).join('')}
+        </div>
+      </div>
+
+      <div style="background:#1a3a6b;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin-bottom:6px;">Section 2: 승인 요청 (작업 업체 관리 감독자 작성) <span class="ro-label">외주작업자 작성완료</span></div>
+      <div class="checklist" style="margin-bottom:6px;">
+        ${i2.map((t,i)=>`<label class="ro"><input type="checkbox"${s2Checks.includes(i)?' checked':''} disabled> <span style="font-size:12px;">${t}</span></label>`).join('')}
+      </div>
+      <div class="sigrow" style="background:#f0f4f8;">
+        <div class="si"><div class="si-lbl">이름</div><input value="${f['s2-name']||''}" readonly></div>
+        <div class="si"><div class="si-lbl">서명</div><div class="sigpad ro" style="height:52px;"><canvas id="sig-s2" width="260" height="52"></canvas></div></div>
+        <div class="si"><div class="si-lbl">날짜</div><input type="date" value="${f['s2-date']||''}" readonly></div>
+        <div class="si"><div class="si-lbl">시간</div><input type="time" value="${f['s2-time']||''}" readonly></div>
+      </div>
+
+      <div style="background:#1565c0;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">
+        Section 3: 작업업체 검토 (업무담당자 작성)
+        ${canS3?'<span class="badge editable">✏ 서명 필요</span>':s3Done?'<span class="badge" style="background:rgba(255,255,255,.3)">✅ 서명완료</span>':'<span class="badge">대기중</span>'}
+      </div>
+      ${!s3Done && !canS3 ? '<div class="alert alert-warn">Section 3 서명 대기 중입니다.</div>' : ''}
+      <div class="checklist" style="margin-bottom:6px;">
+        ${i3.map((t,i)=>canS3
+          ? `<label><input type="checkbox" id="c3-${i}"> <span style="font-size:12px;">${t}</span></label>`
+          : `<label class="ro"><input type="checkbox"${s3Checks.includes(i)?' checked':''} disabled> <span style="font-size:12px;">${t}</span></label>`
+        ).join('')}
+      </div>
+      <div class="sigrow" style="${canS3?'':'background:#f0f4f8;'}">
+        <div class="si"><div class="si-lbl">이름</div><input id="s3n" value="${p.s3_name||mgr3}" ${!canS3?'readonly':''}${!canS3?' style="background:#f0f4f8;color:#1565c0;font-weight:700;"':''}></div>
+        <div class="si"><div class="si-lbl">서명</div><div class="sigpad${canS3?'':' ro'}" style="height:52px;"${canS3?' onclick="openSig(this)"':''}>
+          <canvas id="sig-s3" width="260" height="52"></canvas>
+          ${canS3?'<div class="sighint">클릭하여 서명</div><button class="sig-clear" onclick="clrSig(event,\'sig-s3\')">지우기</button>':''}
+        </div></div>
+        <div class="si"><div class="si-lbl">날짜</div><input id="s3d" type="date" value="${p.s3_date||today}" ${!canS3?'readonly':''}${!canS3?' style="background:#f0f4f8;"':''}></div>
+        <div class="si"><div class="si-lbl">시간</div><input id="s3t" type="time" value="${p.s3_time||nowT}" ${!canS3?'readonly':''}${!canS3?' style="background:#f0f4f8;"':''}></div>
+      </div>
+
+      <div style="background:#0d47a1;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">
+        Section 4: 승인 (작업허가 승인 담당자가 작성)
+        ${canS4?'<span class="badge editable">✏ 서명 필요</span>':s4Done?'<span class="badge" style="background:rgba(255,255,255,.3)">✅ 서명완료</span>':'<span class="badge">대기중</span>'}
+      </div>
+      ${!s4Done && !canS4 ? '<div class="alert alert-warn">Section 4 서명 대기 중입니다.</div>' : ''}
+      <div class="checklist" style="margin-bottom:6px;">
+        ${i4.map((t,i)=>canS4
+          ? `<label><input type="checkbox" id="c4-${i}"> <span style="font-size:12px;">${t}</span></label>`
+          : `<label class="ro"><input type="checkbox"${(p.s4_checks&&JSON.parse(p.s4_checks||'[]').includes(i))?' checked':''} disabled> <span style="font-size:12px;">${t}</span></label>`
+        ).join('')}
+      </div>
+      <div class="sigrow" style="${canS4?'':'background:#f0f4f8;'}">
+        <div class="si"><div class="si-lbl">이름</div><input id="s4n" value="${p.s4_name||'이병문'}" ${!canS4?'readonly':''}${!canS4?' style="background:#f0f4f8;color:#0d47a1;font-weight:700;"':''}></div>
+        <div class="si"><div class="si-lbl">서명</div><div class="sigpad${canS4?'':' ro'}" style="height:52px;"${canS4?' onclick="openSig(this)"':''}>
+          <canvas id="sig-s4" width="260" height="52"></canvas>
+          ${canS4?'<div class="sighint">클릭하여 서명</div><button class="sig-clear" onclick="clrSig(event,\'sig-s4\')">지우기</button>':''}
+        </div></div>
+        <div class="si"><div class="si-lbl">날짜</div><input id="s4d" type="date" value="${p.s4_date||today}" ${!canS4?'readonly':''}${!canS4?' style="background:#f0f4f8;"':''}></div>
+        <div class="si"><div class="si-lbl">시간</div><input id="s4t" type="time" value="${p.s4_time||nowT}" ${!canS4?'readonly':''}${!canS4?' style="background:#f0f4f8;"':''}></div>
+      </div>
+      <div style="border:1px solid #ccc;border-top:none;padding:6px 10px;font-size:12px;margin-bottom:6px;">
+        <strong>제한 사항:</strong> 본 작업 승인 사항은 아래 명시된 시점 혹은 일시 까지만 유효하다.
+        <div style="display:flex;gap:10px;margin-top:4px;font-size:12px;">
+          날짜: <input id="s4ld" type="date" value="${p.s4_limit_date||''}" ${!canS4&&!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;width:130px;">
+          시간: <input id="s4lt" type="time" value="${p.s4_limit_time||''}" ${!canS4&&!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;width:100px;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header s2">
+      <span>📄 작업허가서 양식 (계속)</span>
+      <span class="badge">Page 2 of 2</span>
+      ${canActive?'<span class="badge editable">✏ 작성 가능</span>':''}
+    </div>
+    <div class="card-body">
+      <div style="background:#1565c0;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin-bottom:6px;">Section 5: 작업허가/작업구역 출입관련 지시 사항</div>
+      <div style="font-size:12px;line-height:1.8;">
+        ${['본인의 역할 및 업무, 작업 범위에 대해 숙지하여야 한다.','위험성 평가 및 관리 양식을 읽고, 설명을 들었으며, 이를 이해하고 있어야 한다.','각 조 작업을 시작할 때마다 현장 감독자에게 알려야 하며, 작업허가/출입 관련 지시 및 허가를 받아 작업을 시작하도록 한다.','교대 근무를 할 경우, 작업 시작 전/종료 후 서명한다. (Section 7 참고)','작업 하는 동안 새로운 위험요소가 발견되었다면, 즉시 해당 작업 업체/작업자들의 현장 감독자와 기타 작업과 연관된 당사자들에게 통보한다.'].map((t,i)=>`<div style="display:flex;gap:8px;"><span style="font-weight:700;min-width:16px;">${i+1}.</span><span>${t}</span></div>`).join('')}
+      </div>
+
+      <div style="background:#1565c0;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">Section 6: 작업업체 관리감독자 ${canActive?'<span class="badge editable">✏</span>':''}</div>
+      <table class="pt">
+        <tr><th>작업시작 전 논의사항</th><td><textarea id="s6a" rows="2" style="width:100%;border:none;outline:none;font-size:12px;font-family:inherit;resize:none;"${!canActive?' readonly':''}>${s5.s6a||''}</textarea></td></tr>
+        <tr><th>점검/확인 시점</th><td><input id="s6b" value="${s5.s6b||''}" ${!canActive?'readonly':''} style="width:100%;border:none;outline:none;font-size:12px;font-family:inherit;"></td></tr>
+        <tr><th>최종 점검</th><td style="display:flex;gap:8px;align-items:center;font-size:12px;">날짜: <input id="s6c" type="date" value="${s5.s6c||''}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ddd;outline:none;font-size:12px;font-family:inherit;"> 시간: <input id="s6d" type="time" value="${s5.s6d||''}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ddd;outline:none;font-size:12px;font-family:inherit;"></td></tr>
+        <tr><th>변화/변경사항</th><td><textarea id="s6e" rows="2" style="width:100%;border:none;outline:none;font-size:12px;font-family:inherit;resize:none;"${!canActive?' readonly':''}>${s5.s6e||''}</textarea></td></tr>
+      </table>
+
+      <div style="background:#0d47a1;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">Section 7: 허가 기간 연장 ${canActive?'<span class="badge editable">✏</span>':''}</div>
+      <div style="font-size:12px;padding:6px 0;">기간 연장: <input id="s7f" type="date" value="${s5.s7f||''}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;"> 부터 <input id="s7t" type="date" value="${s5.s7t||''}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;"> (최대 7일)</div>
+
+      <div style="background:#0d47a1;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">Section 8: 작업 철수 ${canActive?'<span class="badge editable">✏</span>':''}</div>
+      <div style="font-size:12px;padding:4px 0;margin-bottom:6px;">해당 작업이 완결되어, 이를 모든 작업자에게 설명하였으며, 작업 현장은 안전하게 정돈되었다.</div>
+      ${buildSigRowActive('s8', s5, canActive)}
+
+      <div style="background:#0d47a1;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">Section 9: 작업 종료 관련 ${canActive?'<span class="badge editable">✏</span>':''}</div>
+      <div style="font-size:12px;padding:4px 0;margin-bottom:6px;">본 작업 활동이 완결되어, 모든 작업자에게 설명하였으며, 작업 현장은 안전하게 정돈되었다.</div>
+      ${buildSigRowActive('s9', s5, canActive)}
+
+      <div style="background:#0d47a1;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">Section 10: 작업 완료 허가 ${canActive?'<span class="badge editable">✏</span>':''}</div>
+      <div style="font-size:12px;padding:4px 0;margin-bottom:6px;">본 작업허가서와 연관된 모든 작업이 종결되었으며, 해당 문서들을 수령하였다.</div>
+      ${buildSigRowActive('s10', s5, canActive)}
+    </div>
+  </div>`;
+}
+
+function buildSigRowActive(id, s5, canEdit) {
+  return `<div class="sigrow" style="${canEdit?'':'background:#f0f4f8;'}">
+    <div class="si"><div class="si-lbl">이름</div><input id="${id}n" value="${s5[id+'n']||''}" ${!canEdit?'readonly':''}></div>
+    <div class="si"><div class="si-lbl">서명</div><div class="sigpad${canEdit?'':' ro'}" style="height:52px;"${canEdit?' onclick="openSig(this)"':''}>
+      <canvas id="sig-${id}" width="260" height="52"></canvas>
+      ${canEdit?`<div class="sighint">클릭하여 서명</div><button class="sig-clear" onclick="clrSig(event,'sig-${id}')">지우기</button>`:''}
+    </div></div>
+    <div class="si"><div class="si-lbl">날짜</div><input id="${id}d" type="date" value="${s5[id+'d']||''}" ${!canEdit?'readonly':''}></div>
+    <div class="si"><div class="si-lbl">시간</div><input id="${id}t" type="time" value="${s5[id+'t']||''}" ${!canEdit?'readonly':''}></div>
+  </div>`;
+}
+
+// ── 추가양식 빌더 ──────────────────────────────────
+function buildExtra(fm, f, ro) {
+  var labels = {hotwork:'화기작업 양식',height:'고소작업 양식',electric:'전기 유지보수 작업 양식',lifting:'기계적 인양 작업 양식'};
+  return `<div class="card">
+    <div class="card-header extra">
+      <span>📋 ${labels[fm.type]||fm.type}</span>
+      <span class="badge">외주작업자 작성완료</span>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-done">외주작업자가 작성 완료한 양식입니다. 내용을 확인해 주세요.</div>
+      <table class="pt">
+        <tr><th>작업명</th><td>${f['s1-work']||''}</td></tr>
+        <tr><th>작업 장소</th><td>${f['s1-place']||''}</td></tr>
+      </table>
+    </div>
+  </div>`;
+}
+
+function renderReadOnly(forms, f, p, mgr3) {
+  // 추가 읽기전용 렌더링 (권한 없을 때도 내용 보여주기)
+  // 이미 renderAll에서 처리됨
+}
+
+// ── 서명 패드 ──────────────────────────────────────
+function initPad(cv) {
+  var ctx=cv.getContext('2d'), dr=false, lx=0, ly=0;
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#111'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.lineJoin='round';
+  function gp(e){var r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;
+    if(e.touches)return{x:(e.touches[0].clientX-r.left)*sx,y:(e.touches[0].clientY-r.top)*sy};
+    return{x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};}
+  cv.addEventListener('mousedown',e=>{dr=true;var p=gp(e);lx=p.x;ly=p.y;});
+  cv.addEventListener('mousemove',e=>{if(!dr)return;var p=gp(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;hideHint(cv);});
+  cv.addEventListener('mouseup',()=>dr=false);
+  cv.addEventListener('mouseleave',()=>dr=false);
+  cv.addEventListener('touchstart',e=>{e.preventDefault();dr=true;var p=gp(e);lx=p.x;ly=p.y;},{passive:false});
+  cv.addEventListener('touchmove',e=>{e.preventDefault();if(!dr)return;var p=gp(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;hideHint(cv);},{passive:false});
+  cv.addEventListener('touchend',()=>dr=false);
+}
+function hideHint(cv){var h=cv.closest('.sigpad').querySelector('.sighint');if(h)h.style.display='none';}
+function clrSig(e,id){e.stopPropagation();var cv=document.getElementById(id);if(!cv)return;var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);var h=cv.closest('.sigpad').querySelector('.sighint');if(h)h.style.display='flex';}
+
+// 확대 서명 모달
+var bigTargetId = null;
+function openSig(padEl) {
+  var cv = padEl.querySelector('canvas');
+  if (!cv || padEl.classList.contains('ro')) return;
+  bigTargetId = cv.id;
+  var modal = document.getElementById('sigModal');
+  modal.classList.add('show');
+  var bigCv = document.getElementById('bigCanvas');
+  bigCtx = bigCv.getContext('2d');
+  bigCtx.fillStyle='#fff'; bigCtx.fillRect(0,0,bigCv.width,bigCv.height);
+  bigCtx.strokeStyle='#111'; bigCtx.lineWidth=3; bigCtx.lineCap='round'; bigCtx.lineJoin='round';
+  bigDrawing=false;
+  bigCv.onmousedown = e=>{bigDrawing=true;var r=bigCv.getBoundingClientRect();bigLx=e.clientX-r.left;bigLy=e.clientY-r.top;};
+  bigCv.onmousemove = e=>{if(!bigDrawing)return;var r=bigCv.getBoundingClientRect();var x=e.clientX-r.left,y=e.clientY-r.top;bigCtx.beginPath();bigCtx.moveTo(bigLx,bigLy);bigCtx.lineTo(x,y);bigCtx.stroke();bigLx=x;bigLy=y;};
+  bigCv.onmouseup = ()=>bigDrawing=false;
+  bigCv.ontouchstart = e=>{e.preventDefault();bigDrawing=true;var r=bigCv.getBoundingClientRect();bigLx=e.touches[0].clientX-r.left;bigLy=e.touches[0].clientY-r.top;};
+  bigCv.ontouchmove = e=>{e.preventDefault();if(!bigDrawing)return;var r=bigCv.getBoundingClientRect();var x=e.touches[0].clientX-r.left,y=e.touches[0].clientY-r.top;bigCtx.beginPath();bigCtx.moveTo(bigLx,bigLy);bigCtx.lineTo(x,y);bigCtx.stroke();bigLx=x;bigLy=y;};
+  bigCv.ontouchend = ()=>bigDrawing=false;
+}
+function clearBigSig(){var cv=document.getElementById('bigCanvas');bigCtx.fillStyle='#fff';bigCtx.fillRect(0,0,cv.width,cv.height);}
+function saveBigSig(){
+  if(!bigTargetId)return;
+  var bigCv=document.getElementById('bigCanvas');
+  var tgtCv=document.getElementById(bigTargetId);
+  if(tgtCv){tgtCv.getContext('2d').drawImage(bigCv,0,0,tgtCv.width,tgtCv.height);}
+  var h=tgtCv.closest('.sigpad').querySelector('.sighint');if(h)h.style.display='none';
+  document.getElementById('sigModal').classList.remove('show');
+}
+
+function getSigData(id){
+  var cv=document.getElementById(id);if(!cv)return null;
+  var d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
+  for(var i=0;i<d.length;i+=4){if(d[i]<200||d[i+1]<200||d[i+2]<200)return cv.toDataURL('image/jpeg',0.85);}
+  return null;
+}
+
+// ── 서명 제출 ──────────────────────────────────────
+async function doSign() {
+  document.getElementById('btnSubmit').disabled = true;
+  ld(true, '서명 저장 중...');
+
+  try {
+    var payload = { token: TOKEN, step: ROLE };
+
+    if (ROLE === 's3') {
+      var checks = [];
+      [0,1,2].forEach(i=>{ if(document.getElementById('c3-'+i)?.checked) checks.push(i); });
+      var sig = getSigData('sig-s3');
+      if (!sig) { ld(false); alert('Section 3 서명을 해주세요.'); document.getElementById('btnSubmit').disabled=false; return; }
+      payload.data = { name:gv('s3n'), sig, date:gv('s3d'), time:gv('s3t'), checks };
+
+    } else if (ROLE === 's4') {
+      var checks4 = [];
+      [0,1].forEach(i=>{ if(document.getElementById('c4-'+i)?.checked) checks4.push(i); });
+      var sig4 = getSigData('sig-s4');
+      if (!sig4) { ld(false); alert('Section 4 서명을 해주세요.'); document.getElementById('btnSubmit').disabled=false; return; }
+      payload.data = { name:gv('s4n'), sig:sig4, date:gv('s4d'), time:gv('s4t'), checks:checks4, limitDate:gv('s4ld'), limitTime:gv('s4lt') };
+
+    } else if (ROLE === 'active') {
+      payload.step = 's5to10';
+      payload.data = {
+        s6a:gv('s6a'), s6b:gv('s6b'), s6c:gv('s6c'), s6d:gv('s6d'), s6e:gv('s6e'),
+        s7f:gv('s7f'), s7t:gv('s7t'),
+        s8n:gv('s8n'), s8sig:getSigData('sig-s8'), s8d:gv('s8d'), s8t:gv('s8t'),
+        s9n:gv('s9n'), s9sig:getSigData('sig-s9'), s9d:gv('s9d'), s9t:gv('s9t'),
+        s10n:gv('s10n'), s10sig:getSigData('sig-s10'), s10d:gv('s10d'), s10t:gv('s10t')
+      };
+    }
+
+    var res = await fetch('/api/sign-permit', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+    });
+    var data = await res.json();
+    ld(false);
+
+    if (!res.ok) { alert('오류: '+(data.error||'저장 실패')); document.getElementById('btnSubmit').disabled=false; return; }
+
+    // 완료 화면
+    document.getElementById('submitArea').style.display = 'none';
+    document.getElementById('formWrap').style.display = 'none';
+    document.getElementById('stepBar').style.display = 'none';
+    var done = document.getElementById('doneScreen');
+    done.classList.add('show');
+    if (ROLE === 's3') {
+      document.getElementById('doneTitle').textContent = 'Section 3 서명 완료!';
+      document.getElementById('doneSub').textContent = '이병문 승인 담당자에게 이메일이 발송되었습니다. 이 창을 닫아도 됩니다.';
+    } else if (ROLE === 's4') {
+      document.getElementById('doneTitle').textContent = 'Section 4 승인 완료!';
+      document.getElementById('doneSub').textContent = '담당자와 이병문에게 완료 이메일이 발송되었습니다.';
+    } else {
+      document.getElementById('doneTitle').textContent = '저장 완료!';
+      document.getElementById('doneSub').textContent = 'Section 5~10 내용이 저장되었습니다.';
+    }
+
+  } catch(e) {
+    ld(false);
+    alert('오류: '+e.message);
+    document.getElementById('btnSubmit').disabled = false;
+  }
+}
+
+// 시작
+init();
+</script>
+</body>
+</html>
