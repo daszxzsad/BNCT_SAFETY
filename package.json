@@ -1,0 +1,9 @@
+{
+  "name": "safety-permit-system",
+  "version": "1.0.0",
+  "description": "안전서류 전자결재 시스템",
+  "dependencies": {
+    "nodemailer": "^6.9.8",
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}
