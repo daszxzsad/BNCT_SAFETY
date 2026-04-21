@@ -918,6 +918,24 @@ async function doSubmit(recipients) {
       return {id:f.id, type:f.type, label:f.label, worker:f.worker||null};
     });
 
+    // 추가양식 데이터 수집 (화기/고소/전기/인양)
+    var extraData = {};
+    state.forms.filter(function(f){ return ['hotwork','height','electric','lifting'].includes(f.type); }).forEach(function(fm){
+      var page = document.getElementById('page-'+fm.id);
+      if(!page) return;
+      var pageData = { inputs:{}, checks:[] };
+      // 텍스트 input 수집
+      page.querySelectorAll('input[type="text"],input[type="date"],input[type="time"]').forEach(function(inp,i){
+        pageData.inputs[i] = inp.value;
+      });
+      // 체크박스 수집
+      page.querySelectorAll('input[type="checkbox"]').forEach(function(cb,i){
+        if(cb.checked) pageData.checks.push(i);
+      });
+      extraData[fm.id] = pageData;
+    });
+    collectedFormData['extra'] = JSON.stringify(extraData);
+
     // DB에 저장 + 담당자 이메일 발송
     var res = await fetch('/api/create-permit', {
       method:'POST',
