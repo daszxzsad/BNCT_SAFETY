@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const nodemailer = require('nodemailer');
 
-const BASE_URL = process.env.BASE_URL || 'YOUR_VERCEL_URL';
+const BASE_URL = process.env.BASE_URL || 'https://bnct-safety.vercel.app';
 // 환경변수 설정 필요:
 // APPROVER_NAME  = 최종 승인자 이름 (예: 이병문)
 // APPROVER_EMAIL = 최종 승인자 이메일 (예: bm.lee@bnctkorea.com)
