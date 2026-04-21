@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>BNCT 전자결재</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Noto Sans KR',Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:100vh;}
@@ -653,8 +655,19 @@ async function doSign() {
       document.getElementById('doneTitle').textContent = 'Section 4 승인 완료!';
       document.getElementById('doneSub').textContent = '담당자와 이병문에게 완료 이메일이 발송되었습니다.';
     } else {
-      document.getElementById('doneTitle').textContent = '저장 완료!';
-      document.getElementById('doneSub').textContent = 'Section 5~10 내용이 저장되었습니다.';
+      document.getElementById('doneTitle').textContent = '저장 완료! PDF 생성 중...';
+      document.getElementById('doneSub').textContent = '잠시만 기다려 주세요.';
+      // PDF 생성
+      setTimeout(async ()=>{
+        try {
+          await generatePDF();
+          document.getElementById('doneTitle').textContent = '저장 및 PDF 생성 완료!';
+          document.getElementById('doneSub').textContent = 'PDF가 다운로드되었습니다.';
+        } catch(e) {
+          document.getElementById('doneTitle').textContent = '저장 완료!';
+          document.getElementById('doneSub').textContent = 'PDF 생성 실패: '+e.message;
+        }
+      }, 300);
     }
 
   } catch(e) {
@@ -662,6 +675,74 @@ async function doSign() {
     alert('오류: '+e.message);
     document.getElementById('btnSubmit').disabled = false;
   }
+}
+
+async function generatePDF() {
+  // html2canvas + jsPDF로 전체 서류 캡처
+  var jsPDF = window.jspdf.jsPDF;
+  var pdf = new jsPDF({orientation:'p', unit:'mm', format:'a4'});
+  var cards = Array.from(document.querySelectorAll('#formWrap .card'));
+  if (!cards.length) throw new Error('서류 없음');
+
+  var proj = document.getElementById('IP').textContent || '안전서류';
+  var now = new Date();
+  var p2 = n=>String(n).padStart(2,'0');
+  var fileName = '안전서류_'+now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+'_'+p2(now.getHours())+p2(now.getMinutes())+'.pdf';
+
+  for (var i=0; i<cards.length; i++) {
+    var card = cards[i];
+    // 원래 스타일 저장 후 캡처용으로 설정
+    var origStyle = card.getAttribute('style')||'';
+    card.style.cssText = 'width:794px!important;max-width:794px!important;border-radius:0!important;margin:0!important;box-shadow:none!important;background:white!important;';
+
+    await new Promise(r=>setTimeout(r,50));
+
+    var canvas = await html2canvas(card, {
+      scale:2, useCORS:true, allowTaint:true, logging:false,
+      backgroundColor:'#ffffff', width:794,
+      onclone: function(doc) {
+        // input→span 교체
+        doc.querySelectorAll('input[type="text"],input[type="date"],input[type="time"]').forEach(function(inp){
+          var s=doc.createElement('span');
+          s.textContent=inp.value||'';
+          s.style.cssText='font-size:12px;display:inline-block;width:100%;word-break:break-all;';
+          inp.parentNode.replaceChild(s,inp);
+        });
+        doc.querySelectorAll('textarea').forEach(function(ta){
+          var s=doc.createElement('span');
+          s.textContent=ta.value||'';
+          s.style.cssText='font-size:12px;display:block;width:100%;white-space:pre-wrap;';
+          ta.parentNode.replaceChild(s,ta);
+        });
+        doc.querySelectorAll('input[type="checkbox"]').forEach(function(cb){
+          var s=doc.createElement('span');
+          s.textContent=cb.checked?'☑':'☐';
+          s.style.fontSize='13px';
+          cb.parentNode.replaceChild(s,cb);
+        });
+        doc.querySelectorAll('*').forEach(function(el){
+          el.style.overflow='visible';
+        });
+        // 버튼류 숨기기
+        doc.querySelectorAll('.sig-clear,.sighint,.btn-submit,.submit-area,.header,.step-bar,.info-bar').forEach(function(el){el.remove();});
+      }
+    });
+
+    card.setAttribute('style', origStyle);
+
+    var imgData = canvas.toDataURL('image/jpeg', 0.92);
+    var pdfW = 210;
+    var pdfH = (canvas.height/canvas.width)*pdfW;
+    if (i>0) pdf.addPage();
+    if (pdfH<=297) {
+      pdf.addImage(imgData,'JPEG',0,0,pdfW,pdfH);
+    } else {
+      var sc = 297/pdfH;
+      pdf.addImage(imgData,'JPEG',0,0,pdfW*sc,297);
+    }
+  }
+
+  pdf.save(fileName);
 }
 
 // 시작
