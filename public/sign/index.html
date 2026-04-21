@@ -524,18 +524,75 @@ function buildSigRowActive(id, s5, canEdit) {
 
 // ── 추가양식 빌더 ──────────────────────────────────
 function buildExtra(fm, f, ro) {
-  var labels = {hotwork:'화기작업 양식',height:'고소작업 양식',electric:'전기 유지보수 작업 양식',lifting:'기계적 인양 작업 양식'};
+  var labels = {hotwork:'화기작업 양식', height:'고소작업 양식', electric:'전기 유지보수 작업 양식', lifting:'기계적 인양 작업 양식'};
+
+  // 저장된 추가양식 데이터
+  var extra = {}; try { extra = JSON.parse(f['extra']||'{}'); } catch(e) {}
+  var pageData = extra[fm.id] || { inputs:{}, checks:[] };
+
+  // 양식별 체크박스 항목 정의
+  var itemDefs = {
+    hotwork: {
+      sections: [
+        { title:'Section 1 – 일반사항', fields:['작업명','작업 장소','접근 제한'] },
+        { title:'Section 2 – 일반 화기작업 / 발화요인 통제', checks:['소화기는 화기 작업 지점 10m 이내에 비치한다.','용접방화포나 불티 방지막을 설치한다.','가연성 물질 또는 연료원은 작업장소로부터 격리시킬 것','배수관, 전선 및 가연성 물질은 덮어둔다.','소방호스를 작업지점까지 끌어다두고 사용할 준비를 해둔다.','화재 감시자는 작업 중 및 작업 완료 후 작업 구역을 주시한다.'] },
+        { title:'Section 3 – 특정 화기작업 / 발화요인 통제', checks:['설비에 인접하여 화기작업이 이루어지는 경우 격리 필요','작업 개시 전 화재방지 또는 화재탐지 시스템 격리 필요','작업 공간 세척, 불순물 제거, 환기 또는 작업전 가스 농도 측정 필요','작업 개시 전 작업장소 준비 또는 작업 중 대기 모니터링 필요','작업 특성상 방독마스크 착용 필요','작업 특성상 가스 호스 또는 기타 민감한 시설/장비의 보호 조치 필요','아크 용접시, 감전 가능성을 최소화하기 위해 조치가 필요한 경우'] }
+      ]
+    },
+    height: {
+      sections: [
+        { title:'Section 1 – 고소작업 / 접근 방법', fields:['작업명','작업 유형','작업 장소/위치','접근 방법/고소 작업'] },
+        { title:'Section 2 – 고소작업차 관련 요구사항', checks:['작업자의 머리 위쪽 전선, 구조물 등의 위험요소로부터 최소 안전거리를 유지해야 한다','고소작업차를 평평한 곳에 설치하기 위해 특정 조치가 필요하다','고소작업차 주위에 바리케이트 또는 표지판을 설치해야한다.','붐 길이가 11m 이상이어서 면허증을 가진 고소작업차 기사가 필요하다.','고소작업차를 사용하는 작업자는 설치, 통제 및 비상 탈출에 대해 숙지하고 있다.'] }
+      ]
+    },
+    electric: {
+      sections: [
+        { title:'Section 1 – 일반 사항', fields:['작업명','위치'] },
+        { title:'반드시 필요한 조치', checks:['반드시 최신 설계도를 참고 해야함 (작업 개시 전)','자격증이 있는 전기 기술자만 작업 수행','설비/장비 책임자에게 반드시 알려야 함','격리 지점에 필요한 표지 부착','구조 키트는 점검 후 가까운 위치에 배치','점검 완료한 절연 테스트 도구 및 장비만 사용','모든 작업자가 금속 물질 제거해야만 함','안전보호구 필수 착용 구역 진입 시 방염복 착용','전기 절연 장갑의 손상 유무 및 시험 전압 확인','자외선 차단 기능이 있는 안면보호대 반드시 사용','작업 구역 접근 방지를 위해 바리케이드 반드시 설치'] }
+      ]
+    },
+    lifting: {
+      sections: [
+        { title:'SECTION 1 – 일반사항', fields:['작업명','작업 장소','작업 목적/유형'] },
+        { title:'SECTION 5 – 체크리스트', checks:['위험성 평가를 수행하였는가?','화물이 전원이 켜져있는 설비나 전선 위로 인양되고 있는가?','작업자는 장비에 익숙한가?','인양될 화물이 20톤을 초과하는가?','크레인 기사에게 알려야 할 사항이 있는가?','화물의 권상지점과 인양 방법을 파악하였는가?','인양 작업 지역의 전선에 대하여 확인하고 격리를 실시하였는가?','진입경로를 확보하고 장애물이 없는지 확인하였는가?','화물이 잘 묶여 있는지 확인하였는가?','악천후가 예상되는가?'] }
+      ]
+    }
+  };
+
+  var def = itemDefs[fm.type] || { sections:[] };
+  var inputIdx = 0;
+  var checkIdx = 0;
+
+  var sectionsHtml = def.sections.map(function(sec){
+    var html = '<div style="background:#2e7d32;color:white;padding:7px 12px;font-size:12px;font-weight:700;border-radius:4px;margin:10px 0 6px;">'+sec.title+'</div>';
+    if(sec.fields){
+      html += '<table class="pt">';
+      sec.fields.forEach(function(field){
+        var val = pageData.inputs[inputIdx]||'';
+        inputIdx++;
+        html += '<tr><th>'+field+'</th><td>'+val+'</td></tr>';
+      });
+      html += '</table>';
+    }
+    if(sec.checks){
+      html += '<div class="checklist">';
+      sec.checks.forEach(function(item){
+        var checked = pageData.checks.includes(checkIdx);
+        checkIdx++;
+        html += '<label class="ro"><input type="checkbox"'+(checked?' checked':'')+'  disabled> <span style="font-size:12px;">'+item+'</span></label>';
+      });
+      html += '</div>';
+    }
+    return html;
+  }).join('');
+
   return `<div class="card">
     <div class="card-header extra">
       <span>📋 ${labels[fm.type]||fm.type}</span>
       <span class="badge">외주작업자 작성완료</span>
     </div>
     <div class="card-body">
-      <div class="alert alert-done">외주작업자가 작성 완료한 양식입니다. 내용을 확인해 주세요.</div>
-      <table class="pt">
-        <tr><th>작업명</th><td>${f['s1-work']||''}</td></tr>
-        <tr><th>작업 장소</th><td>${f['s1-place']||''}</td></tr>
-      </table>
+      ${sectionsHtml}
     </div>
   </div>`;
 }
@@ -616,6 +673,10 @@ async function doSign() {
       if (!sig) { ld(false); alert('Section 3 서명을 해주세요.'); document.getElementById('btnSubmit').disabled=false; return; }
       payload.data = { name:gv('s3n'), sig, date:gv('s3d'), time:gv('s3t'), checks };
 
+      // 테스트: s3 서명 후 PDF 즉시 생성
+      ld(true, 'PDF 생성 중...');
+      try { await generatePDF(); } catch(e) { console.warn('PDF 실패:', e); }
+
     } else if (ROLE === 's4') {
       var checks4 = [];
       [0,1].forEach(i=>{ if(document.getElementById('c4-'+i)?.checked) checks4.push(i); });
@@ -634,6 +695,12 @@ async function doSign() {
       };
     }
 
+    // active일 때: DB 저장 전에 PDF 먼저 생성 (화면이 보이는 상태에서)
+    if (ROLE === 'active') {
+      ld(true, 'PDF 생성 중...');
+      try { await generatePDF(); } catch(pdfErr) { console.warn('PDF 실패:', pdfErr); }
+    }
+
     var res = await fetch('/api/sign-permit', {
       method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
     });
@@ -646,28 +713,17 @@ async function doSign() {
     document.getElementById('submitArea').style.display = 'none';
     document.getElementById('formWrap').style.display = 'none';
     document.getElementById('stepBar').style.display = 'none';
-    var done = document.getElementById('doneScreen');
-    done.classList.add('show');
+    document.getElementById('doneScreen').classList.add('show');
+
     if (ROLE === 's3') {
       document.getElementById('doneTitle').textContent = 'Section 3 서명 완료!';
-      document.getElementById('doneSub').textContent = '이병문 승인 담당자에게 이메일이 발송되었습니다. 이 창을 닫아도 됩니다.';
+      document.getElementById('doneSub').textContent = '승인 담당자에게 이메일이 발송되었습니다. 이 창을 닫아도 됩니다.';
     } else if (ROLE === 's4') {
       document.getElementById('doneTitle').textContent = 'Section 4 승인 완료!';
-      document.getElementById('doneSub').textContent = '담당자와 이병문에게 완료 이메일이 발송되었습니다.';
+      document.getElementById('doneSub').textContent = '담당자에게 완료 이메일이 발송되었습니다.';
     } else {
-      document.getElementById('doneTitle').textContent = '저장 완료! PDF 생성 중...';
-      document.getElementById('doneSub').textContent = '잠시만 기다려 주세요.';
-      // PDF 생성
-      setTimeout(async ()=>{
-        try {
-          await generatePDF();
-          document.getElementById('doneTitle').textContent = '저장 및 PDF 생성 완료!';
-          document.getElementById('doneSub').textContent = 'PDF가 다운로드되었습니다.';
-        } catch(e) {
-          document.getElementById('doneTitle').textContent = '저장 완료!';
-          document.getElementById('doneSub').textContent = 'PDF 생성 실패: '+e.message;
-        }
-      }, 300);
+      document.getElementById('doneTitle').textContent = '저장 및 PDF 완료!';
+      document.getElementById('doneSub').textContent = 'PDF가 다운로드되었습니다.';
     }
 
   } catch(e) {
