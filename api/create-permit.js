@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const nodemailer = require('nodemailer');
 
-const BASE_URL = 'YOUR_VERCEL_URL';
+const BASE_URL = 'https://bnct-safety.vercel.app';
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
