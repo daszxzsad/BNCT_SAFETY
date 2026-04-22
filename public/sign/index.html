@@ -3,1276 +3,590 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>BNCT 전자결재</title>
+<title>BNCT 전자결재 시스템</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Noto Sans KR',Arial,sans-serif;background:#f0f4f8;color:#1a2332;min-height:100vh;}
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
-
-.header{background:linear-gradient(135deg,#003087,#1565c0);color:white;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-.logo{font-size:22px;font-weight:900;letter-spacing:3px;}
-.header-sub{font-size:12px;opacity:.75;margin-top:2px;}
-.status-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;}
-
-.info-bar{background:white;border-bottom:2px solid #e0e7ef;padding:14px 24px;display:flex;gap:24px;flex-wrap:wrap;font-size:13px;}
-.info-item strong{color:#003087;}
-
-.container{max-width:1040px;margin:24px auto;padding:0 20px 80px;}
-
-.step-bar{display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid #dde3ed;}
-.step{flex:1;padding:10px 8px;text-align:center;font-size:11px;font-weight:700;background:#f5f7fa;color:#9aa5b4;border-right:1px solid #dde3ed;}
+:root{
+  --navy:#003087;--navy2:#1a3a6b;--blue:#1565c0;--blue2:#0d47a1;
+  --green:#2e7d32;--red:#c62828;--amber:#f57c00;
+  --bg:#eef2f7;--white:#fff;
+  --gray1:#f5f7fa;--gray2:#e8edf5;--gray3:#d1dae8;--gray4:#9aa8bc;--gray7:#3d4f6a;
+  --text:#1a2332;--shadow:0 2px 16px rgba(0,30,87,.10);--radius:10px;
+}
+html,body{font-family:'Noto Sans KR',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.hdr{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 60%,var(--blue) 100%);color:#fff;position:sticky;top:0;z-index:200;box-shadow:0 3px 20px rgba(0,30,87,.35);}
+.hdr-inner{display:flex;align-items:center;justify-content:space-between;padding:13px 28px;max-width:1100px;margin:0 auto;}
+.hdr-logo{font-size:20px;font-weight:900;letter-spacing:3px;}
+.hdr-sub{font-size:11px;opacity:.65;margin-top:2px;}
+.hdr-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;}
+.hdr-badge.done{background:rgba(46,125,50,.6);}
+.infobar{background:var(--white);border-bottom:2px solid var(--gray2);padding:11px 28px;display:flex;gap:28px;flex-wrap:wrap;font-size:13px;}
+.infobar strong{color:var(--navy);font-weight:700;}
+.stepwrap{max-width:1100px;margin:20px auto 0;padding:0 20px;}
+.stepbar{display:flex;border-radius:var(--radius);overflow:hidden;border:1px solid var(--gray3);background:var(--white);box-shadow:var(--shadow);}
+.step{flex:1;padding:11px 6px;text-align:center;font-size:11px;font-weight:700;background:var(--gray1);color:var(--gray4);border-right:1px solid var(--gray3);transition:all .2s;line-height:1.4;}
 .step:last-child{border-right:none;}
-.step.done{background:#e8f4fd;color:#1565c0;}
-.step.active{background:#003087;color:white;}
-
-.card{background:white;border-radius:10px;border:1px solid #e0e7ef;margin-bottom:16px;overflow:visible;}
-.card-header{padding:12px 18px;font-size:13px;font-weight:700;color:white;display:flex;align-items:center;gap:8px;}
-.card-header.s1{background:#1a3a6b;}
-.card-header.s2{background:#1a3a6b;}
-.card-header.s3{background:#1565c0;}
-.card-header.s4{background:#0d47a1;}
-.card-header.extra{background:#2e7d32;}
-.card-header.pledge{background:#37474f;}
-.badge{background:rgba(255,255,255,.25);padding:2px 8px;border-radius:12px;font-size:10px;}
-.badge.editable{background:#ffd54f;color:#333;}
-
-.card-body{padding:16px 18px;overflow:visible;}
-.ro-label{display:inline-block;background:#e3f2fd;color:#1565c0;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;}
-.ed-label{display:inline-block;background:#fff9c4;color:#f57f17;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;}
-
+.step.done{background:#e3f2fd;color:var(--blue);}
+.step.active{background:var(--navy);color:#fff;}
+.step-num{display:inline-block;width:20px;height:20px;border-radius:50%;background:var(--gray3);font-size:11px;line-height:20px;margin-bottom:3px;font-weight:900;}
+.step.done .step-num{background:var(--blue);color:#fff;}
+.step.active .step-num{background:rgba(255,255,255,.3);color:#fff;}
+.wrap{max-width:1100px;margin:20px auto 100px;padding:0 20px;}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray2);margin-bottom:14px;overflow:visible;box-shadow:var(--shadow);}
+.card-hdr{padding:12px 20px;font-size:13px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;border-radius:var(--radius) var(--radius) 0 0;}
+.card-hdr.pledge{background:linear-gradient(90deg,#37474f,#546e7a);}
+.card-hdr.permit1,.card-hdr.permit2{background:linear-gradient(90deg,var(--navy2),var(--navy));}
+.card-hdr.extra{background:linear-gradient(90deg,var(--green),#388e3c);}
+.card-body{padding:18px 20px;overflow:visible;}
+.badge{background:rgba(255,255,255,.22);padding:2px 9px;border-radius:12px;font-size:10px;}
+.badge.edit{background:#ffd740;color:#333;font-weight:800;}
+.badge.done-mark{background:rgba(255,255,255,.3);}
+.badge.wait{background:rgba(255,255,255,.12);opacity:.8;}
+.alert{padding:11px 15px;border-radius:7px;font-size:12.5px;margin:8px 0;line-height:1.5;}
+.alert-info{background:#e3f2fd;border-left:4px solid var(--blue);color:#0d47a1;}
+.alert-warn{background:#fff3e0;border-left:4px solid var(--amber);color:#e65100;}
+.alert-done{background:#e8f5e9;border-left:4px solid var(--green);color:#1b5e20;}
+.alert-lock{background:#fce4ec;border-left:4px solid var(--red);color:#b71c1c;}
 table.pt{width:100%;border-collapse:collapse;font-size:12.5px;}
-table.pt th{background:#f0f4f8;padding:8px 12px;font-weight:700;border:1px solid #dde3ed;width:120px;text-align:left;white-space:nowrap;}
-table.pt td{padding:8px 12px;border:1px solid #dde3ed;}
-table.pt input{width:100%;border:none;outline:none;font-size:12.5px;font-family:inherit;background:transparent;}
-table.pt input[readonly]{background:#f8faff;color:#333;}
-
-.section-title{font-size:12.5px;font-weight:700;color:white;padding:8px 14px;border-radius:4px;margin:12px 0 6px;}
-.s3-color{background:#1565c0;}
-.s4-color{background:#0d47a1;}
-
-.checklist{display:flex;flex-direction:column;gap:5px;font-size:12px;padding:6px 0;}
-.checklist label{display:flex;align-items:flex-start;gap:8px;cursor:pointer;line-height:1.5;}
-.checklist label input{margin-top:3px;flex-shrink:0;}
+table.pt th{background:var(--gray1);padding:8px 12px;font-weight:700;border:1px solid var(--gray3);width:130px;text-align:left;white-space:nowrap;vertical-align:middle;}
+table.pt td{padding:8px 12px;border:1px solid var(--gray3);vertical-align:middle;}
+table.pt input,table.pt textarea{width:100%;border:none;outline:none;font-size:12.5px;font-family:inherit;background:transparent;resize:none;}
+table.pt input[readonly],table.pt textarea[readonly]{background:#f6f8fc;}
+.checklist{display:flex;flex-direction:column;gap:6px;font-size:12px;padding:4px 0;}
+.checklist label{display:flex;align-items:flex-start;gap:8px;cursor:pointer;line-height:1.5;padding:3px 0;}
+.checklist label input[type=checkbox]{margin-top:3px;flex-shrink:0;width:14px;height:14px;}
 .checklist label.ro{cursor:default;}
-
-.sigrow{display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:8px;margin-top:10px;padding:10px;padding-bottom:14px;background:#f8faff;border-radius:8px;border:1px solid #dde3ed;overflow:visible;}
+.sec-hdr{padding:8px 14px;font-size:12.5px;font-weight:700;color:#fff;border-radius:5px;margin:12px 0 6px;display:flex;align-items:center;justify-content:space-between;}
+.sec-hdr.navy{background:var(--navy2);}
+.sec-hdr.blue{background:var(--blue);}
+.sec-hdr.blue2{background:var(--blue2);}
+.sigrow{display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:10px;margin-top:10px;padding:12px;background:var(--gray1);border-radius:8px;border:1px solid var(--gray2);overflow:visible;}
 .si{display:flex;flex-direction:column;gap:4px;}
-.si-lbl{font-size:11px;font-weight:700;color:#666;}
-.si input{border:1px solid #dde3ed;border-radius:5px;padding:5px 8px;font-size:12px;font-family:inherit;width:100%;}
-.si input[readonly]{background:#f0f4f8;color:#1565c0;font-weight:700;}
-
-.sigpad{border:2px dashed #bbb;border-radius:8px;background:#fafafa;position:relative;cursor:pointer;}
-.sigpad.ro{cursor:default;border-style:solid;background:#f0f4f8;}
-.sigpad canvas{display:block;border-radius:6px;}
-.sighint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#aaa;pointer-events:none;}
-.sig-clear{position:absolute;top:4px;right:4px;background:#ff5252;color:white;border:none;border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer;z-index:10;}
-
-/* 서명 확대 모달 */
+.si-lbl{font-size:10.5px;font-weight:700;color:var(--gray4);text-transform:uppercase;letter-spacing:.3px;}
+.si input{border:1px solid var(--gray3);border-radius:6px;padding:6px 9px;font-size:12px;font-family:inherit;width:100%;transition:border-color .15s;}
+.si input:focus{outline:none;border-color:var(--blue);}
+.si input[readonly]{background:var(--gray1);color:var(--navy);font-weight:600;cursor:default;}
+.sigpad{border:2px dashed var(--gray3);border-radius:7px;background:#fafbfd;position:relative;cursor:pointer;transition:border-color .15s,background .15s;}
+.sigpad:hover:not(.ro){border-color:var(--blue);background:#f0f4ff;}
+.sigpad.ro{cursor:default;border-style:solid;border-color:var(--gray3);background:var(--gray1);}
+.sigpad canvas{display:block;border-radius:5px;}
+.sighint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#bbb;pointer-events:none;gap:5px;}
+.sig-clear{position:absolute;top:5px;right:5px;background:rgba(198,40,40,.85);color:#fff;border:none;border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer;z-index:10;}
 .sig-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;}
 .sig-modal.show{display:flex;}
-.sig-modal-inner{background:white;border-radius:12px;padding:20px;width:92vw;max-width:520px;}
-.sig-modal-inner canvas{border:1px solid #ddd;border-radius:8px;width:100%;height:200px;}
+.sig-modal-box{background:#fff;border-radius:14px;padding:24px;width:min(540px,94vw);box-shadow:0 8px 40px rgba(0,0,0,.3);}
+.sig-modal-title{font-size:15px;font-weight:700;margin-bottom:14px;color:var(--navy);}
+.sig-modal-cw{position:relative;border:2px dashed var(--gray3);border-radius:8px;background:#fafafa;height:210px;}
+.sig-modal-cw canvas{width:100%;height:100%;border-radius:6px;display:block;}
+.sig-modal-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#ccc;pointer-events:none;}
 .sig-modal-btns{display:flex;gap:10px;margin-top:14px;}
-.sig-modal-btns button{flex:1;padding:10px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}
-.btn-clear{background:#f5f5f5;color:#333;}
-.btn-ok{background:#003087;color:white;}
-
-.submit-area{position:fixed;bottom:0;left:0;right:0;background:white;border-top:2px solid #e0e7ef;padding:14px 24px;display:flex;gap:12px;justify-content:flex-end;z-index:50;}
-.btn-submit{background:#003087;color:white;border:none;padding:13px 32px;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:1px;}
-.btn-submit:disabled{background:#ccc;cursor:not-allowed;}
-.btn-submit:hover:not(:disabled){background:#1565c0;}
-
-.done-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;}
+.sig-modal-btns button{flex:1;padding:11px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.sig-btn-clear{background:var(--gray2);color:var(--gray7);}
+.sig-btn-ok{background:var(--navy);color:#fff;}
+.submit-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.97);border-top:2px solid var(--gray2);padding:14px 28px;display:flex;gap:12px;justify-content:flex-end;z-index:100;backdrop-filter:blur(6px);box-shadow:0 -4px 20px rgba(0,0,0,.08);}
+.btn-submit{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;border:none;padding:13px 36px;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.5px;box-shadow:0 4px 14px rgba(0,48,135,.3);transition:transform .15s,box-shadow .15s;}
+.btn-submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,48,135,.4);}
+.btn-submit:disabled{background:#bbb;cursor:not-allowed;box-shadow:none;transform:none;}
+.btn-pdf-dl{background:linear-gradient(135deg,var(--red),#8b0000);color:#fff;border:none;padding:13px 24px;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(198,40,40,.25);transition:transform .15s;}
+.btn-pdf-dl:hover{transform:translateY(-1px);}
+.done-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:55vh;text-align:center;gap:12px;}
 .done-screen.show{display:flex;}
-.done-icon{font-size:64px;margin-bottom:16px;}
-.done-title{font-size:22px;font-weight:900;color:#003087;margin-bottom:8px;}
-.done-sub{font-size:14px;color:#666;}
-
-.loading{display:none;position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:9998;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+.done-icon{font-size:72px;}
+.done-title{font-size:24px;font-weight:900;color:var(--navy);}
+.done-sub{font-size:14px;color:var(--gray4);max-width:380px;line-height:1.6;white-space:pre-line;}
+.loading{display:none;position:fixed;inset:0;background:rgba(255,255,255,.88);z-index:9998;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
 .loading.show{display:flex;}
-.loading-spinner{width:48px;height:48px;border:5px solid #e0e7ef;border-top-color:#003087;border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.loading-msg{font-size:14px;font-weight:700;color:#003087;}
-
-.alert{padding:10px 14px;border-radius:6px;font-size:12.5px;margin:8px 0;}
-.alert-info{background:#e3f2fd;border-left:4px solid #1565c0;color:#0d47a1;}
-.alert-warn{background:#fff3e0;border-left:4px solid #f57c00;color:#e65100;}
-.alert-done{background:#e8f5e9;border-left:4px solid #2e7d32;color:#1b5e20;}
-.alert-lock{background:#fce4ec;border-left:4px solid #c62828;color:#b71c1c;}
-
-/* 추가양식 전용 스타일 */
-.ex-wrap{font-family:'Malgun Gothic','맑은 고딕','Noto Sans KR',sans-serif;font-size:12px;color:#111;}
-.ex-title-bar{display:flex;align-items:center;gap:10px;border:2px solid #c00;padding:6px 10px;margin-bottom:8px;}
-.ex-badge{background:#c00;color:white;font-size:11px;font-weight:700;padding:3px 8px;border-radius:2px;}
+.loading-spin{width:48px;height:48px;border:5px solid var(--gray2);border-top-color:var(--navy);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-msg{font-size:14px;font-weight:700;color:var(--navy);}
+.ex-wrap{font-size:12px;color:#111;}
+.ex-titlebar{display:flex;align-items:center;gap:10px;border:2px solid #c62828;padding:6px 12px;margin-bottom:10px;border-radius:3px;}
+.ex-badge{background:#c62828;color:#fff;font-size:11px;font-weight:700;padding:3px 9px;border-radius:2px;letter-spacing:.5px;}
 .ex-title{font-size:16px;font-weight:900;letter-spacing:1px;}
-.ex-permitno{display:flex;justify-content:flex-end;margin-bottom:6px;}
-.ex-permitno-box{border:1.5px solid #555;display:flex;align-items:center;}
-.ex-permitno-label{background:#f0f0f0;padding:4px 10px;font-weight:700;border-right:1px solid #555;font-size:11px;}
-.ex-permitno-val{padding:4px 40px;font-size:11px;}
-.ex-sec{background:#1a5276;color:white;padding:5px 10px;font-weight:700;font-size:12px;margin:8px 0 4px;}
-.ex-sec.green{background:#1a6b2a;}
-.ex-notice{background:#fef9e7;border:1px solid #f0c040;padding:6px 10px;font-size:11.5px;margin-bottom:6px;line-height:1.6;}
-.ex-chkrow{display:flex;align-items:flex-start;gap:6px;padding:3px 0;font-size:11.5px;line-height:1.5;}
-.ex-chkrow input{margin-top:2px;flex-shrink:0;}
-.ex-tbl{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:2px;}
-.ex-tbl th{background:#dce6f1;padding:5px 8px;border:1px solid #aaa;font-weight:700;text-align:left;}
-.ex-tbl td{padding:5px 8px;border:1px solid #aaa;vertical-align:top;}
-.ex-tbl th.center,.ex-tbl td.center{text-align:center;width:40px;}
+.ex-sec{color:#fff;padding:6px 10px;font-weight:700;font-size:11.5px;margin:10px 0 3px;display:flex;align-items:center;justify-content:space-between;}
+.ex-sec.blu{background:#1a5276;}
+.ex-sec.green{background:#2e7d32;}
+.ex-notice{background:#fef9e7;border:1px solid #f0c040;padding:7px 10px;font-size:11.5px;margin-bottom:8px;line-height:1.6;border-radius:3px;}
+.ex-tbl{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:3px;}
+.ex-tbl th{background:#dce6f1;padding:5px 9px;border:1px solid #aab;font-weight:700;text-align:left;vertical-align:middle;}
+.ex-tbl td{padding:5px 9px;border:1px solid #aab;vertical-align:top;line-height:1.5;}
+.ex-subhdr{background:#dce6f1;padding:5px 8px;border:1px solid #aab;font-weight:700;font-size:11px;display:flex;align-items:center;justify-content:space-between;}
+@media(max-width:700px){.sigrow{grid-template-columns:1fr 1fr;}.hdr-inner{padding:11px 16px;}.wrap{padding:0 12px;}.card-body{padding:14px 14px;}}
 </style>
 </head>
 <body>
-
-<div class="header">
-  <div>
-    <div class="logo">BNCT</div>
-    <div class="header-sub">자산관리팀 안전서류 전자결재</div>
+<header class="hdr">
+  <div class="hdr-inner">
+    <div><div class="hdr-logo">BNCT</div><div class="hdr-sub">자산관리팀 안전서류 전자결재 시스템</div></div>
+    <div class="hdr-badge" id="statusBadge">불러오는 중...</div>
   </div>
-  <div class="status-badge" id="statusBadge">불러오는 중...</div>
-</div>
-
-<div class="info-bar" id="infoBar" style="display:none;">
+</header>
+<div class="infobar" id="infoBar" style="display:none;">
   <span>공사명: <strong id="IP">-</strong></span>
   <span>업체명: <strong id="IC">-</strong></span>
   <span>작업인원: <strong id="IW">-</strong></span>
-  <span>제출: <strong id="ID">-</strong></span>
+  <span>제출일시: <strong id="ID">-</strong></span>
 </div>
-
-<div class="container">
-  <div class="step-bar" id="stepBar">
-    <div class="step" id="step1">1단계<br>외주작업자</div>
-    <div class="step" id="step2">2단계<br>Section 3</div>
-    <div class="step" id="step3">3단계<br>Section 4</div>
-    <div class="step" id="step4">4단계<br>완료</div>
+<div class="stepwrap">
+  <div class="stepbar" id="stepBar">
+    <div class="step" id="step1"><div class="step-num">1</div><br>외주작업자<br>서류 제출</div>
+    <div class="step" id="step2"><div class="step-num">2</div><br>업무담당자<br>Section 3 서명</div>
+    <div class="step" id="step3"><div class="step-num">3</div><br>승인담당자<br>Section 4 서명</div>
+    <div class="step" id="step4"><div class="step-num">4</div><br>작업 진행<br>최종 완료</div>
   </div>
-
+</div>
+<div class="wrap">
   <div id="formWrap"></div>
   <div class="done-screen" id="doneScreen">
-    <div class="done-icon">✅</div>
-    <div class="done-title" id="doneTitle">서명이 완료되었습니다</div>
+    <div class="done-icon" id="doneIcon">✅</div>
+    <div class="done-title" id="doneTitle">서명 완료</div>
     <div class="done-sub" id="doneSub">이 창을 닫아도 됩니다.</div>
   </div>
 </div>
-
-<div class="submit-area" id="submitArea" style="display:none;">
-  <button class="btn-submit" id="btnSubmit" onclick="doSign()">서명 저장 및 완료 →</button>
+<div class="submit-bar" id="submitBar" style="display:none;">
+  <button class="btn-pdf-dl" id="btnPdfDl" onclick="dlPDF()" style="display:none;">📄 PDF 저장</button>
+  <button class="btn-submit" id="btnSubmit" onclick="doSign()">서명 저장 →</button>
 </div>
-
-<!-- 서명 확대 모달 -->
 <div class="sig-modal" id="sigModal">
-  <div class="sig-modal-inner">
-    <div style="font-size:14px;font-weight:700;margin-bottom:12px;">서명하기</div>
-    <canvas id="bigCanvas" width="460" height="180"></canvas>
+  <div class="sig-modal-box">
+    <div class="sig-modal-title">✍️ 서명하기</div>
+    <div class="sig-modal-cw">
+      <canvas id="bigCanvas" width="480" height="200"></canvas>
+      <div class="sig-modal-hint" id="bigHint">손가락 또는 마우스로 서명하세요</div>
+    </div>
     <div class="sig-modal-btns">
-      <button class="btn-clear" onclick="clearBigSig()">지우기</button>
-      <button class="btn-ok" onclick="saveBigSig()">확인</button>
+      <button class="sig-btn-clear" onclick="clearBigSig()">지우기</button>
+      <button class="sig-btn-ok" onclick="saveBigSig()">확인</button>
     </div>
   </div>
 </div>
-
 <div class="loading" id="loadingEl">
-  <div class="loading-spinner"></div>
-  <div class="loading-msg" id="loadingMsg">불러오는 중...</div>
+  <div class="loading-spin"></div>
+  <div class="loading-msg" id="loadingMsg">처리 중...</div>
 </div>
-
 <script>
-var TOKEN = new URLSearchParams(location.search).get('token');
-var ROLE = new URLSearchParams(location.search).get('role'); // s3 | s4 | active
-var PD = null;
-var now = new Date(), p2 = n=>String(n).padStart(2,'0');
-var today = now.getFullYear()+'-'+p2(now.getMonth()+1)+'-'+p2(now.getDate());
-var nowT = p2(now.getHours())+':'+p2(now.getMinutes());
-var activeBigPad = null; // {canvasId, ctx}
-var bigCtx = null, bigDrawing = false, bigLx = 0, bigLy = 0;
-
-function ld(show, msg) {
-  var el = document.getElementById('loadingEl');
-  el.classList.toggle('show', show);
-  if (msg) document.getElementById('loadingMsg').textContent = msg;
-}
-function gv(id) { var e=document.getElementById(id); return e?e.value:''; }
-
-// ── 데이터 로드 ──────────────────────────────────────
-async function init() {
-  if (!TOKEN) { document.getElementById('formWrap').innerHTML = '<div class="alert alert-lock">유효하지 않은 링크입니다.</div>'; return; }
-  ld(true, '서류 불러오는 중...');
-  try {
-    var res = await fetch('/api/get-permit?token='+TOKEN);
-    var data = await res.json();
+'use strict';
+const TOKEN=new URLSearchParams(location.search).get('token');
+const ROLE=new URLSearchParams(location.search).get('role');
+let PD=null;
+const now=new Date(),p2=n=>String(n).padStart(2,'0');
+const TODAY=now.getFullYear()+'-'+p2(now.getMonth()+1)+'-'+p2(now.getDate());
+const NOWT=p2(now.getHours())+':'+p2(now.getMinutes());
+let bigTargetId=null,bigCtx=null,bigDrawing=false,bigLx=0,bigLy=0;
+const ld=(show,msg='처리 중...')=>{document.getElementById('loadingEl').classList.toggle('show',show);document.getElementById('loadingMsg').textContent=msg;};
+const gv=id=>{const e=document.getElementById(id);return e?e.value:'';};
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const safeJSON=(s,def)=>{try{return JSON.parse(s||'');}catch{return def;}};
+async function init(){
+  if(!TOKEN){document.getElementById('formWrap').innerHTML='<div class="alert alert-lock">⚠️ 유효하지 않은 링크입니다.</div>';return;}
+  ld(true,'서류 불러오는 중...');
+  try{
+    const res=await fetch('/api/get-permit?token='+TOKEN);
+    const data=await res.json();
     ld(false);
-    if (!res.ok || !data.permit) { document.getElementById('formWrap').innerHTML = '<div class="alert alert-lock">'+(data.error||'서류를 찾을 수 없습니다.')+'</div>'; return; }
-    PD = data.permit;
-    renderAll();
-  } catch(e) { ld(false); document.getElementById('formWrap').innerHTML = '<div class="alert alert-lock">네트워크 오류: '+e.message+'</div>'; }
+    if(!res.ok||!data.permit){document.getElementById('formWrap').innerHTML='<div class="alert alert-lock">⚠️ '+(data.error||'서류를 찾을 수 없습니다.')+'</div>';return;}
+    PD=data.permit;renderAll();
+  }catch(e){ld(false);document.getElementById('formWrap').innerHTML='<div class="alert alert-lock">⚠️ 네트워크 오류: '+e.message+'</div>';}
 }
-
-function renderAll() {
-  var p = PD;
-  var f = {}; try { f = JSON.parse(p.form_fields||'{}'); } catch(e) {}
-  var mgrs = []; try { mgrs = JSON.parse(p.managers||'[]'); } catch(e) {}
-  var forms = []; try { forms = JSON.parse(p.forms||'[]'); } catch(e) {}
-  var mgr3 = mgrs.map(m=>m.name).join(', ');
-  var status = p.status || 'pending_s3';
-
-  // 정보바
-  document.getElementById('IP').textContent = p.project_name||'-';
-  document.getElementById('IC').textContent = p.company_name||'-';
-  document.getElementById('IW').textContent = (p.worker_count||'-')+'명';
-  document.getElementById('ID').textContent = p.submit_date||'-';
-  document.getElementById('infoBar').style.display = 'flex';
-
-  // 상태 배지
-  var badges = {
-    'pending_s3':'⏳ Section 3 서명 대기',
-    'pending_s4':'⏳ Section 4 서명 대기',
-    'active':'✅ 승인 완료 (진행 중)',
-    'completed':'🏁 최종 완료'
-  };
-  document.getElementById('statusBadge').textContent = badges[status]||status;
-
-  // 스텝바
-  var steps = ['step1','step2','step3','step4'];
-  var activeStep = status==='pending_s3'?1:status==='pending_s4'?2:status==='active'||status==='completed'?3:3;
-  steps.forEach((id,i)=>{
-    var el = document.getElementById(id);
-    el.className = 'step'+(i<activeStep?' done':i===activeStep?' active':'');
+function renderAll(){
+  const p=PD,f=safeJSON(p.form_fields,{}),mgrs=safeJSON(p.managers,[]),forms=safeJSON(p.forms,[]);
+  const mgr3=mgrs.map(m=>m.name).join(', '),status=p.status||'pending_s3';
+  document.getElementById('IP').textContent=p.project_name||'-';
+  document.getElementById('IC').textContent=p.company_name||'-';
+  document.getElementById('IW').textContent=(p.worker_count||'-')+'명';
+  document.getElementById('ID').textContent=p.submit_date||'-';
+  document.getElementById('infoBar').style.display='flex';
+  const BM={pending_s3:'⏳ Section 3 서명 대기',pending_s4:'⏳ Section 4 서명 대기',active:'✅ 승인 완료 · 작업 진행 중',completed:'🏁 모든 절차 완료'};
+  const badge=document.getElementById('statusBadge');
+  badge.textContent=BM[status]||status;
+  if(status==='completed'||status==='active')badge.classList.add('done');
+  const si={pending_s3:1,pending_s4:2,active:3,completed:3}[status]??3;
+  ['step1','step2','step3','step4'].forEach((id,i)=>{
+    document.getElementById(id).className='step'+(i<si?' done':i===si?' active':'');
   });
-
-  // 접근 권한 체크
-  var canEdit = false;
-  if (ROLE==='s3' && status==='pending_s3') canEdit = true;
-  if (ROLE==='s4' && status==='pending_s4') canEdit = true;
-  if (ROLE==='active' && (status==='active'||status==='completed')) canEdit = true;
-
-  if (!canEdit && ROLE) {
-    var msgs = {
-      's3': status==='pending_s3'?null:'이미 서명이 완료된 단계이거나 아직 이전 단계가 완료되지 않았습니다.',
-      's4': status==='pending_s4'?null:'Section 3 서명이 완료된 후 접근 가능합니다.',
-      'active': (status==='active'||status==='completed')?null:'Section 4 승인 후 접근 가능합니다.'
-    };
-    if (msgs[ROLE]) {
-      document.getElementById('formWrap').innerHTML = '<div class="alert alert-lock">🔒 '+msgs[ROLE]+'</div>';
-      renderReadOnly(forms, f, p, mgr3);
-      return;
-    }
+  const canS3=ROLE==='s3'&&status==='pending_s3';
+  const canS4=ROLE==='s4'&&status==='pending_s4';
+  const canActive=ROLE==='active'&&(status==='active'||status==='completed');
+  if(ROLE&&!canS3&&!canS4&&!canActive){
+    const lm={s3:'이미 서명이 완료되었거나 이전 단계가 처리되지 않았습니다.',s4:'Section 3 서명이 완료된 후 접근할 수 있습니다.',active:'Section 4 승인이 완료된 후 접근할 수 있습니다.'};
+    document.getElementById('formWrap').innerHTML='<div class="alert alert-lock">🔒 '+lm[ROLE]+'</div>';
+    document.getElementById('formWrap').innerHTML+=forms.filter(fm=>fm.type==='pledge').map(fm=>buildPledge(fm,f,p)).join('')+buildPermit(f,p,mgr3,'view',status,false)+forms.filter(fm=>['hotwork','height','electric','lifting'].includes(fm.type)).map(fm=>buildExtra(fm,f)).join('');
+    setTimeout(()=>restoreSigs(p),60);return;
   }
-
-  var html = '';
-  var proj = p.project_name||'', comp = p.company_name||'';
-
-  // ── 안전서약서들 (읽기전용) ──
-  forms.filter(fm=>fm.type==='pledge').forEach(fm=>{
-    html += buildPledge(fm, f, p, true);
-  });
-
-  // ── 작업허가서 ──
-  var hasPermit = forms.some(fm=>fm.type==='permit') || forms.length===0;
-  if (hasPermit) {
-    html += buildPermit(f, p, mgr3, ROLE, status, canEdit);
-  }
-
-  // ── 추가양식들 ──
-  forms.filter(fm=>['hotwork','height','electric','lifting'].includes(fm.type)).forEach(fm=>{
-    html += buildExtra(fm, f, true);
-  });
-
-  document.getElementById('formWrap').innerHTML = html;
-
-  // 서명패드 초기화
-  setTimeout(()=>{
-    document.querySelectorAll('.sigpad:not(.ro) canvas').forEach(cv=>{ initPad(cv); });
-    // 저장된 서명 이미지 복원
-    restoreSigs(p);
-  }, 50);
-
-  // 제출 버튼
-  if (canEdit && ROLE !== 'active') {
-    document.getElementById('submitArea').style.display = 'flex';
-  } else if (ROLE === 'active') {
-    document.getElementById('submitArea').style.display = 'flex';
-    document.getElementById('btnSubmit').textContent = '저장하기';
+  let html='';
+  forms.filter(fm=>fm.type==='pledge').forEach(fm=>{html+=buildPledge(fm,f,p);});
+  html+=buildPermit(f,p,mgr3,ROLE,status,canS3||canS4||canActive);
+  forms.filter(fm=>['hotwork','height','electric','lifting'].includes(fm.type)).forEach(fm=>{html+=buildExtra(fm,f);});
+  document.getElementById('formWrap').innerHTML=html;
+  setTimeout(()=>{document.querySelectorAll('.sigpad:not(.ro) canvas').forEach(cv=>initPad(cv));restoreSigs(p);},60);
+  const bar=document.getElementById('submitBar');
+  if(canS3||canS4||canActive){
+    bar.style.display='flex';
+    document.getElementById('btnSubmit').textContent=canActive?'💾 저장하기':'✅ 서명 저장 →';
+    if(canActive)document.getElementById('btnPdfDl').style.display='inline-block';
   }
 }
-
-function restoreSigs(p) {
-  // Section 2 서명 (읽기전용 이미지)
-  var f = {}; try { f = JSON.parse(p.form_fields||'{}'); } catch(e) {}
-  if (f.sig2_img) drawSigImage('sig-s2', f.sig2_img);
-  // 안전서약서 서명들
-  var forms = []; try { forms = JSON.parse(p.forms||'[]'); } catch(e) {}
-  forms.filter(fm=>fm.type==='pledge').forEach(fm=>{
-    var sigKey = 'sig_pledge_'+fm.worker;
-    if (f[sigKey]) drawSigImage('sig-pledge-'+fm.worker, f[sigKey]);
-  });
-  // S3,S4 서명 복원
-  if (p.s3_sig) drawSigImage('sig-s3', p.s3_sig);
-  if (p.s4_sig) drawSigImage('sig-s4', p.s4_sig);
+function restoreSigs(p){
+  const f=safeJSON(p.form_fields,{});
+  if(f.sig2_img)drawSigImg('sig-s2',f.sig2_img);
+  safeJSON(p.forms,[]).filter(fm=>fm.type==='pledge').forEach(fm=>{const k='sig_pledge_'+fm.worker;if(f[k])drawSigImg('sig-pledge-'+fm.worker,f[k]);});
+  if(p.s3_sig)drawSigImg('sig-s3',p.s3_sig);
+  if(p.s4_sig)drawSigImg('sig-s4',p.s4_sig);
+  const s5=safeJSON(p.s5_to_s10,{});
+  ['s8','s9','s10'].forEach(id=>{if(s5[id+'sig'])drawSigImg('sig-'+id,s5[id+'sig']);});
+}
+function drawSigImg(id,url){const cv=document.getElementById(id);if(!cv)return;const img=new Image();img.onload=()=>cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);img.src=url;}
+</script>
+<script>
+// ── 안전서약서 빌더 ──
+function buildPledge(fm,f,p){
+  const wi=fm.worker||1;
+  const items=['현장 출입 시 안전보호구(안전모, 안전조끼, 안전화 등)를 철저히 착용한다.','작업간에 핸드폰, 이어폰 등 기타 개인 전자제품 사용을 금지한다.','차량은 제한속도를 준수하고, 지정된 도로만을 주행한다. (야드 내 30km/h, 안벽 내 15km/h 이내)','중량물 및 작업 중인 컨테이너 아래 등 위험지역에 위치하지 않는다.','장비 주행로에는 주차 및 보행을 금지한다.','작업 전 안전 조회 및 제반 안전교육시에는 반드시 참석토록 한다.','운행 전 경고장치 이상유무 확인 및 경고등을 점등한다.','보행시는 보행자 통로를 사용하며 작업 중 또는 장비내에서 흡연하지 않는다.','운전중 안전벨트 착용 및 음주, 졸음 운전을 하지 않는다.','출입이 금지된 구역이나 본인의 작업 구역 이외에는 출입하지 않는다.','휴게시간에는 지정된 휴게장소에서 충분한 휴식을 취한다.','고소, 추락, 낙하물, 충돌 위험이 있는 장소에는 작업할 때 상급관리자의 허가 및 감독하에 작업을 안전하게 실시한다.','화기작업 전 작업역 내 관계자외 출입을 금지하고 표지판을 설치한다.','화기작업 중 용접불티등에 의한 화재가 발생하지 않도록 비산불티차단막 설치 및 소화기를 비치한다.','작업 전 및 완료 후 해당 담당자에게 연락을 취하여 완료 여부를 확인 받는다.','작업 중 특이사항 발생 시 즉각 해당 담당자에게 보고 및 안전조치 한다.'];
+  const nm=esc(f['pledge_name_'+wi]||''),rk=esc(f['pledge_rank_'+wi]||''),ct=esc(f['pledge_contact_'+wi]||'');
+  return `<div class="card"><div class="card-hdr pledge"><span>📋 안전서약서</span><span class="badge">작업자 ${wi} / ${esc(p.worker_count)}</span><span class="badge done-mark">외주작업자 작성완료</span></div><div class="card-body">
+    <div style="text-align:center;font-size:20px;font-weight:900;letter-spacing:5px;padding:14px 0 12px;border-bottom:2px solid #000;margin-bottom:12px;">안 전 서 약 서</div>
+    <p style="font-size:12px;line-height:1.9;margin-bottom:14px;">상기 본인은 BNCT 터미널에 근무함에 있어 본인과 동료 근로자의 생명과 건강 그리고 가정의 평화와 건강하고 안전한 터미널 조성을 위하여 아래 준수 사항을 철저히 이행하여 산업재해를 예방하는데 최선을 다할 것을 서약합니다.</p>
+    <div style="text-align:center;font-weight:900;font-size:13px;padding:8px 0;border-top:2px solid #000;border-bottom:2px solid #000;letter-spacing:3px;margin-bottom:10px;">◈ 작업자 준수 사항 ◈</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;">
+      ${items.map((t,i)=>`<tr><td style="border:1px solid #ccc;padding:5px 8px;text-align:center;width:28px;font-weight:700;background:#f5f5f5;">${i+1}</td><td style="border:1px solid #ccc;padding:5px 10px;line-height:1.5;">${t}</td></tr>`).join('')}
+      <tr><td style="border:1px solid #ccc;padding:5px 8px;text-align:center;width:28px;font-weight:700;background:#fff3cd;">17</td><td style="border:1px solid #ccc;padding:5px 10px;line-height:1.5;background:#fff3cd;"><strong>안전조치 미비로 인하여 현장 관리감독자 및 안전담당자의 작업중단 및 개선요청 시 즉각 이행한다.</strong></td></tr>
+      <tr><td style="border:1px solid #ccc;padding:5px 8px;text-align:center;width:28px;font-weight:700;background:#fff3cd;">18</td><td style="border:1px solid #ccc;padding:5px 10px;line-height:1.5;background:#fff3cd;"><strong>*무관용의 법칙* 안전수칙 위반 시 경고장 발부 및 터미널 출입금지 조치한다. (1회 적발시: 경고, 2회 적발시: 출입금지 3개월)</strong></td></tr>
+    </table>
+    <div style="font-size:12px;font-weight:700;text-align:center;padding:9px;border:1px solid #bbb;background:#fafafa;margin-bottom:12px;line-height:1.7;">상기 본인은 위 준수사항을 성실하게 이행하겠으며 본인의 과실로 인한 사고 발생 시<br>책임질것을 서약합니다. 안전을 최우선으로 생각하며 안전하게 작업하겠습니다.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border:1px solid #bbb;font-size:12px;margin-bottom:10px;">
+      <div style="padding:7px 10px;border-right:1px solid #bbb;"><div style="font-weight:700;font-size:11px;color:#555;margin-bottom:3px;">공사명</div><div>${esc(p.project_name||'')}</div></div>
+      <div style="padding:7px 10px;border-right:1px solid #bbb;"><div style="font-weight:700;font-size:11px;color:#555;margin-bottom:3px;">소 속</div><div>${esc(p.company_name||'')}</div></div>
+      <div style="padding:7px 10px;border-right:1px solid #bbb;"><div style="font-weight:700;font-size:11px;color:#555;margin-bottom:3px;">직 위</div><div>${rk}</div></div>
+      <div style="padding:7px 10px;"><div style="font-weight:700;font-size:11px;color:#555;margin-bottom:3px;">연락처</div><div>${ct}</div></div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;border:1px solid #bbb;padding:8px 12px;font-size:12px;">
+      <div style="font-weight:700;">성 명:</div><div style="flex:1;font-size:13px;">${nm}</div>
+      <div style="font-weight:700;">(인)</div>
+      <div class="sigpad ro" style="width:150px;height:54px;"><canvas id="sig-pledge-${wi}" width="150" height="54"></canvas><div class="sighint">서명</div></div>
+    </div>
+  </div></div>`;
 }
 
-function drawSigImage(canvasId, dataUrl) {
-  var cv = document.getElementById(canvasId);
-  if (!cv) return;
-  var img = new Image();
-  img.onload = ()=>{ cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height); };
-  img.src = dataUrl;
-}
-
-// ── 안전서약서 빌더 ──────────────────────────────────
-function buildPledge(fm, f, p, ro) {
-  var wi = fm.worker||1;
-  var items = ['현장 출입 시 안전보호구(안전모, 안전조끼, 안전화 등)를 철저히 착용한다.',
-    '작업간에 핸드폰, 이어폰 등 기타 개인 전자제품 사용을 금지한다.',
-    '차량은 제한속도를 준수하고, 지정된 도로만을 주행한다. (야드 내 30km/h, 안벽 내 15km/h 이내)',
-    '중량물 및 작업 중인 컨테이너 아래 등 위험지역에 위치하지 않는다.',
-    '장비 주행로에는 주차 및 보행을 금지한다.',
-    '작업 전 안전 조회 및 제반 안전교육시에는 반드시 참석토록 한다.',
-    '운행 전 경고장치 이상유무 확인 및 경고등을 점등한다.',
-    '보행시는 보행자 통로를 사용하며 작업 중 또는 장비내에서 흡연하지 않는다.',
-    '운전중 안전벨트 착용 및 음주, 졸음 운전을 하지 않는다.',
-    '출입이 금지된 구역이나 본인의 작업 구역 이외에는 출입하지 않는다.',
-    '휴게시간에는 지정된 휴게장소에서 충분한 휴식을 취한다.',
-    '고소, 추락, 낙하물, 충돌 위험이 있는 장소에는 작업할 때 상급관리자의 허가 및 감독하에 작업을 안전하게 실시한다.',
-    '화기작업 전 작업역 내 관계자외 출입을 금지하고 표지판을 설치한다.',
-    '화기작업 중 용접불티등에 의한 화재가 발생하지 않도록 비산불티차단막 설치 및 소화기를 비치한다.',
-    '작업 전 및 완료 후 해당 담당자에게 연락을 취하여 완료 여부를 확인 받는다.',
-    '작업 중 특이사항 발생 시 즉각 해당 담당자에게 보고 및 안전조치 한다.'];
-
-  var nameVal = f['pledge_name_'+wi]||'';
-  var rankVal = f['pledge_rank_'+wi]||'';
-  var contactVal = f['pledge_contact_'+wi]||'';
-
-  return `<div class="card">
-    <div class="card-header pledge">
-      <span>📋 안전서약서</span>
-      <span class="badge">작업자 ${wi} / ${p.worker_count}</span>
-      <span class="badge">외주작업자 작성완료</span>
-    </div>
-    <div class="card-body">
-      <div style="text-align:center;font-size:18px;font-weight:900;letter-spacing:4px;padding:12px 0;border-bottom:2px solid #000;margin-bottom:12px;">안 전 서 약 서</div>
-      <div style="font-size:12px;line-height:1.8;margin-bottom:12px;">상기 본인은 BNCT 터미널에 근무함에 있어 본인과 동료 근로자의 생명과 건강 그리고 가정의 평화와 건강하고 안전한 터미널 조성을 위하여 아래 준수 사항을 철저히 이행하여 산업재해를 예방하는데 최선을 다할 것을 서약합니다.</div>
-      <div style="text-align:center;font-weight:900;font-size:13px;padding:6px 0;border-top:2px solid #000;border-bottom:2px solid #000;letter-spacing:3px;margin-bottom:10px;">◈ 작업자 준수 사항 ◈</div>
-      <table class="pt" style="margin-bottom:10px;">
-        ${items.map((t,i)=>`<tr ${i>=16?'style="background:#fff3e0;"':''}><th style="width:30px;text-align:center;">${i+1}</th><td>${t}</td></tr>`).join('')}
-        <tr style="background:#fff3e0;"><th style="text-align:center;">17</th><td><strong>안전조치 미비로 인하여 현장 관리감독자 및 안전담당자의 작업중단 및 개선요청 시 즉각 이행한다.</strong></td></tr>
-        <tr style="background:#fff3e0;"><th style="text-align:center;">18</th><td><strong>*무관용의 법칙* 안전수칙 위반 시 경고장 발부 및 터미널 출입금지 조치한다. (1회 적발시: 경고, 2회 적발시: 출입금지 3개월)</strong></td></tr>
-      </table>
-      <div style="font-size:12px;font-weight:700;text-align:center;padding:8px;border:1px solid #ccc;background:#fafafa;margin-bottom:10px;">
-        상기 본인은 위 준수사항을 성실하게 이행하겠으며 본인의 과실로 인한 사고 발생 시<br>책임질것을 서약합니다. 안전을 최우선으로 생각하며 안전하게 작업하겠습니다.
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;border:1px solid #ccc;font-size:12px;margin-bottom:8px;">
-        <div style="padding:6px 10px;border-right:1px solid #ccc;"><div style="font-weight:700;">공사명</div><div>${p.project_name||''}</div></div>
-        <div style="padding:6px 10px;border-right:1px solid #ccc;"><div style="font-weight:700;">소 속</div><div>${p.company_name||''}</div></div>
-        <div style="padding:6px 10px;border-right:1px solid #ccc;"><div style="font-weight:700;">직 위</div><div>${rankVal}</div></div>
-        <div style="padding:6px 10px;"><div style="font-weight:700;">연락처</div><div>${contactVal}</div></div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;border:1px solid #ccc;padding:6px 10px;font-size:12px;">
-        <div style="font-weight:700;">성 명:</div>
-        <div style="flex:1;">${nameVal}</div>
-        <div style="font-weight:700;">(인)</div>
-        <div class="sigpad ro" style="width:140px;height:52px;">
-          <canvas id="sig-pledge-${wi}" width="140" height="52"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
-
-// ── 작업허가서 빌더 ──────────────────────────────────
-function buildPermit(f, p, mgr3, role, status, canEdit) {
-  var i2=['본인은 위험성 평가를 비롯하여 본 작업 활동과 관련하여 필요한 관리 양식들을 검토하였다.','본인은, 조치가 적절히 이루어졌는지 확실히 하기 위해 관계자와 협의하였다.','본인은, 첨부된 위험성 평가 및 해당 관리 양식에 따라 본 작업 활동을 조정 및 관리할 능력이 있다.','본인은 작업자 및 작업에 영향을 받는 사람의 건강 및 안전을 확보하기 위해 필요한 모든 조치를 취할것이다.','본인은, 작업 수행자가 위험성 평가 및 각 관리 양식은 물론 아래 Section 5 의 지시사항에 대한 설명을 들었고 해당 내용들을 이해했음을 확인하여야 한다.','본인은, 작업 활동 전체에 걸쳐 위험요소를 관찰하고 관리하여야 한다.','본인은, 당 작업 허가 승인 담당자에게 본 허가서를 검토하고, 등록 및 번호를 부여하도록 요청하는 바이다.'];
-  var i3=['본인은, 위험성 평가 및 필요한 관리 양식을 포함하여 관련된 모든 문서들의 내용을 검토하였으며 작업 업체/작업자에게 의견을 제시하였다.','본인은, 작업 업체/작업자를 담당하는 자로서, 작업 방식과 제안된 관리방안들이 시행되는 것을 모니터링하여 BNCT 터미널 안전 기준이 달성될 수 있도록 할 것이다.','본인은, 해당 작업 구역의 관련자에게 작업 시행 구간, 작업 업체/작업자가 완결해야 할 모든 작업 내역, 작업 관리감독 및 강화를 위해 수립된 절차들에 대한 정보를 알려주었다.'];
-  var i4=['본인은, 위험성 평가를 비롯하여 필요한 관리 양식을 포함한 모든 관련 문서 내용을 검토하였다.','본인은 당 작업 허가서를 등록하고, 작업 번호를 부여하였으며, 관련된 모든 문서 상에 해당 작업 번호를 기입하였다.'];
-
-  var s3Done = !!p.s3_signed_at;
-  var s4Done = !!p.s4_signed_at;
-
-  // S5~10 데이터
-  var s5 = {}; try { s5 = JSON.parse(p.s5_to_s10||'{}'); } catch(e) {}
-
-  var canS3 = role==='s3' && status==='pending_s3';
-  var canS4 = role==='s4' && status==='pending_s4';
-  var canActive = role==='active' && (status==='active'||status==='completed');
-
-  function roChk(t) { return `<label class="ro"><input type="checkbox" checked disabled> <span>${t}</span></label>`; }
-  function edChk(id, t, checked) { return `<label><input type="checkbox" id="${id}"${checked?' checked':''}> <span>${t}</span></label>`; }
-
-  var s2Checks = []; try { s2Checks = JSON.parse(f.s2_checks||'[]'); } catch(e) {}
-  var s3Checks = []; try { s3Checks = JSON.parse(p.s3_checks||'[]'); } catch(e) {}
-
-  return `<div class="card">
-    <div class="card-header s1">
-      <span>📄 작업허가서 양식</span>
-      <span class="badge">Page 1 of 2</span>
-    </div>
-    <div class="card-body">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-        <div style="border:1px solid #999;display:flex;font-size:12px;">
-          <div style="background:#f0f0f0;padding:4px 10px;font-weight:700;border-right:1px solid #999;">작업허가 번호</div>
-          <div style="padding:4px 10px;">${f.permitNo||''}</div>
-        </div>
-      </div>
-      <div style="border:1px solid #ccc;padding:6px 10px;font-size:12px;margin-bottom:10px;">본 양식은 상세 명시된 <strong>고위험군 작업</strong>에 대한 승인 및 전달 사항 등을 관리하기 위한 것이다.</div>
-
-      <div style="background:#1a3a6b;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin-bottom:6px;">Section 1: 일반 사항 <span class="ro-label">외주작업자 작성완료</span></div>
-      <table class="pt" style="margin-bottom:10px;">
-        <tr><th>작업명</th><td>${f['s1-work']||''}</td></tr>
-        <tr><th>작업 장소</th><td>${f['s1-place']||''}</td></tr>
-        <tr><th>작업 업체</th><td>${f['s1-company']||p.company_name||''}</td></tr>
-        <tr><th>예상 작업 기간</th><td>${f['s1-from']||''} 부터 ${f['s1-to']||''} 까지</td></tr>
-      </table>
-
-      <div style="border:1px solid #ccc;padding:8px 10px;font-size:12px;margin-bottom:10px;">
-        <strong>고위험군 작업:</strong>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-top:6px;">
-          ${['화기 작업','토공/굴착 작업','밀폐공간출입작업','설비/장비 격리','고소 작업','기계적 인양 작업','고압 스위치 접근 및 시험 작업 허가','전기 유지보수작업'].map(t=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;"><input type="checkbox" disabled> ${t}</label>`).join('')}
-        </div>
-      </div>
-
-      <div style="background:#1a3a6b;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin-bottom:6px;">Section 2: 승인 요청 (작업 업체 관리 감독자 작성) <span class="ro-label">외주작업자 작성완료</span></div>
-      <div class="checklist" style="margin-bottom:6px;">
-        ${i2.map((t,i)=>`<label class="ro"><input type="checkbox"${s2Checks.includes(i)?' checked':''} disabled> <span style="font-size:12px;">${t}</span></label>`).join('')}
-      </div>
-      <div class="sigrow" style="background:#f0f4f8;">
-        <div class="si"><div class="si-lbl">이름</div><input value="${f['s2-name']||''}" readonly></div>
-        <div class="si"><div class="si-lbl">서명</div><div class="sigpad ro" style="height:52px;"><canvas id="sig-s2" width="260" height="52"></canvas></div></div>
-        <div class="si"><div class="si-lbl">날짜</div><input type="date" value="${f['s2-date']||''}" readonly></div>
-        <div class="si"><div class="si-lbl">시간</div><input type="time" value="${f['s2-time']||''}" readonly></div>
-      </div>
-
-      <div style="background:#1565c0;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">
-        Section 3: 작업업체 검토 (업무담당자 작성)
-        ${canS3?'<span class="badge editable">✏ 서명 필요</span>':s3Done?'<span class="badge" style="background:rgba(255,255,255,.3)">✅ 서명완료</span>':'<span class="badge">대기중</span>'}
-      </div>
-      ${!s3Done && !canS3 ? '<div class="alert alert-warn">Section 3 서명 대기 중입니다.</div>' : ''}
-      <div class="checklist" style="margin-bottom:6px;">
-        ${i3.map((t,i)=>canS3
-          ? `<label><input type="checkbox" id="c3-${i}"> <span style="font-size:12px;">${t}</span></label>`
-          : `<label class="ro"><input type="checkbox"${s3Checks.includes(i)?' checked':''} disabled> <span style="font-size:12px;">${t}</span></label>`
-        ).join('')}
-      </div>
-      <div class="sigrow" style="${canS3?'':'background:#f0f4f8;'}">
-        <div class="si"><div class="si-lbl">이름</div><input id="s3n" value="${p.s3_name||mgr3}" ${!canS3?'readonly':''}${!canS3?' style="background:#f0f4f8;color:#1565c0;font-weight:700;"':''}></div>
-        <div class="si"><div class="si-lbl">서명</div><div class="sigpad${canS3?'':' ro'}" style="height:52px;"${canS3?' onclick="openSig(this)"':''}>
-          <canvas id="sig-s3" width="260" height="52"></canvas>
-          ${canS3?'<div class="sighint">클릭하여 서명</div><button class="sig-clear" onclick="clrSig(event,\'sig-s3\')">지우기</button>':''}
-        </div></div>
-        <div class="si"><div class="si-lbl">날짜</div><input id="s3d" type="date" value="${p.s3_date||today}" ${!canS3?'readonly':''}${!canS3?' style="background:#f0f4f8;"':''}></div>
-        <div class="si"><div class="si-lbl">시간</div><input id="s3t" type="time" value="${p.s3_time||nowT}" ${!canS3?'readonly':''}${!canS3?' style="background:#f0f4f8;"':''}></div>
-      </div>
-
-      <div style="background:#0d47a1;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">
-        Section 4: 승인 (작업허가 승인 담당자가 작성)
-        ${canS4?'<span class="badge editable">✏ 서명 필요</span>':s4Done?'<span class="badge" style="background:rgba(255,255,255,.3)">✅ 서명완료</span>':'<span class="badge">대기중</span>'}
-      </div>
-      ${!s4Done && !canS4 ? '<div class="alert alert-warn">Section 4 서명 대기 중입니다.</div>' : ''}
-      <div class="checklist" style="margin-bottom:6px;">
-        ${i4.map((t,i)=>canS4
-          ? `<label><input type="checkbox" id="c4-${i}"> <span style="font-size:12px;">${t}</span></label>`
-          : `<label class="ro"><input type="checkbox"${(p.s4_checks&&JSON.parse(p.s4_checks||'[]').includes(i))?' checked':''} disabled> <span style="font-size:12px;">${t}</span></label>`
-        ).join('')}
-      </div>
-      <div class="sigrow" style="${canS4?'':'background:#f0f4f8;'}">
-        <div class="si"><div class="si-lbl">이름</div><input id="s4n" value="${p.s4_name||'이병문'}" ${!canS4?'readonly':''}${!canS4?' style="background:#f0f4f8;color:#0d47a1;font-weight:700;"':''}></div>
-        <div class="si"><div class="si-lbl">서명</div><div class="sigpad${canS4?'':' ro'}" style="height:52px;"${canS4?' onclick="openSig(this)"':''}>
-          <canvas id="sig-s4" width="260" height="52"></canvas>
-          ${canS4?'<div class="sighint">클릭하여 서명</div><button class="sig-clear" onclick="clrSig(event,\'sig-s4\')">지우기</button>':''}
-        </div></div>
-        <div class="si"><div class="si-lbl">날짜</div><input id="s4d" type="date" value="${p.s4_date||today}" ${!canS4?'readonly':''}${!canS4?' style="background:#f0f4f8;"':''}></div>
-        <div class="si"><div class="si-lbl">시간</div><input id="s4t" type="time" value="${p.s4_time||nowT}" ${!canS4?'readonly':''}${!canS4?' style="background:#f0f4f8;"':''}></div>
-      </div>
-      <div style="border:1px solid #ccc;border-top:none;padding:6px 10px;font-size:12px;margin-bottom:6px;">
-        <strong>제한 사항:</strong> 본 작업 승인 사항은 아래 명시된 시점 혹은 일시 까지만 유효하다.
-        <div style="display:flex;gap:10px;margin-top:4px;font-size:12px;">
-          날짜: <input id="s4ld" type="date" value="${p.s4_limit_date||''}" ${!canS4&&!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;width:130px;">
-          시간: <input id="s4lt" type="time" value="${p.s4_limit_time||''}" ${!canS4&&!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;width:100px;">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header s2">
-      <span>📄 작업허가서 양식 (계속)</span>
-      <span class="badge">Page 2 of 2</span>
-      ${canActive?'<span class="badge editable">✏ 작성 가능</span>':''}
-    </div>
-    <div class="card-body">
-      <div style="background:#1565c0;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin-bottom:6px;">Section 5: 작업허가/작업구역 출입관련 지시 사항</div>
-      <div style="font-size:12px;line-height:1.8;">
-        ${['본인의 역할 및 업무, 작업 범위에 대해 숙지하여야 한다.','위험성 평가 및 관리 양식을 읽고, 설명을 들었으며, 이를 이해하고 있어야 한다.','각 조 작업을 시작할 때마다 현장 감독자에게 알려야 하며, 작업허가/출입 관련 지시 및 허가를 받아 작업을 시작하도록 한다.','교대 근무를 할 경우, 작업 시작 전/종료 후 서명한다. (Section 7 참고)','작업 하는 동안 새로운 위험요소가 발견되었다면, 즉시 해당 작업 업체/작업자들의 현장 감독자와 기타 작업과 연관된 당사자들에게 통보한다.'].map((t,i)=>`<div style="display:flex;gap:8px;"><span style="font-weight:700;min-width:16px;">${i+1}.</span><span>${t}</span></div>`).join('')}
-      </div>
-
-      <div style="background:#1565c0;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">Section 6: 작업업체 관리감독자 ${canActive?'<span class="badge editable">✏</span>':''}</div>
-      <table class="pt">
-        <tr><th>작업시작 전 논의사항</th><td><textarea id="s6a" rows="2" style="width:100%;border:none;outline:none;font-size:12px;font-family:inherit;resize:none;"${!canActive?' readonly':''}>${s5.s6a||''}</textarea></td></tr>
-        <tr><th>점검/확인 시점</th><td><input id="s6b" value="${s5.s6b||''}" ${!canActive?'readonly':''} style="width:100%;border:none;outline:none;font-size:12px;font-family:inherit;"></td></tr>
-        <tr><th>최종 점검</th><td style="display:flex;gap:8px;align-items:center;font-size:12px;">날짜: <input id="s6c" type="date" value="${s5.s6c||''}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ddd;outline:none;font-size:12px;font-family:inherit;"> 시간: <input id="s6d" type="time" value="${s5.s6d||''}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ddd;outline:none;font-size:12px;font-family:inherit;"></td></tr>
-        <tr><th>변화/변경사항</th><td><textarea id="s6e" rows="2" style="width:100%;border:none;outline:none;font-size:12px;font-family:inherit;resize:none;"${!canActive?' readonly':''}>${s5.s6e||''}</textarea></td></tr>
-      </table>
-
-      <div style="background:#0d47a1;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">Section 7: 허가 기간 연장 ${canActive?'<span class="badge editable">✏</span>':''}</div>
-      <div style="font-size:12px;padding:6px 0;">기간 연장: <input id="s7f" type="date" value="${s5.s7f||''}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;"> 부터 <input id="s7t" type="date" value="${s5.s7t||''}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;"> (최대 7일)</div>
-
-      <div style="background:#0d47a1;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">Section 8: 작업 철수 ${canActive?'<span class="badge editable">✏</span>':''}</div>
-      <div style="font-size:12px;padding:4px 0;margin-bottom:6px;">해당 작업이 완결되어, 이를 모든 작업자에게 설명하였으며, 작업 현장은 안전하게 정돈되었다.</div>
-      ${buildSigRowActive('s8', s5, canActive)}
-
-      <div style="background:#0d47a1;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">Section 9: 작업 종료 관련 ${canActive?'<span class="badge editable">✏</span>':''}</div>
-      <div style="font-size:12px;padding:4px 0;margin-bottom:6px;">본 작업 활동이 완결되어, 모든 작업자에게 설명하였으며, 작업 현장은 안전하게 정돈되었다.</div>
-      ${buildSigRowActive('s9', s5, canActive)}
-
-      <div style="background:#0d47a1;color:white;padding:7px 12px;font-size:12.5px;font-weight:700;border-radius:4px;margin:10px 0 6px;">Section 10: 작업 완료 허가 ${canActive?'<span class="badge editable">✏</span>':''}</div>
-      <div style="font-size:12px;padding:4px 0;margin-bottom:6px;">본 작업허가서와 연관된 모든 작업이 종결되었으며, 해당 문서들을 수령하였다.</div>
-      ${buildSigRowActive('s10', s5, canActive)}
-    </div>
-  </div>`;
-}
-
-function buildSigRowActive(id, s5, canEdit) {
-  return `<div class="sigrow" style="${canEdit?'':'background:#f0f4f8;'}">
-    <div class="si"><div class="si-lbl">이름</div><input id="${id}n" value="${s5[id+'n']||''}" ${!canEdit?'readonly':''}></div>
-    <div class="si"><div class="si-lbl">서명</div><div class="sigpad${canEdit?'':' ro'}" style="height:52px;"${canEdit?' onclick="openSig(this)"':''}>
-      <canvas id="sig-${id}" width="260" height="52"></canvas>
-      ${canEdit?`<div class="sighint">클릭하여 서명</div><button class="sig-clear" onclick="clrSig(event,'sig-${id}')">지우기</button>`:''}
+// ── 작업허가서 빌더 ──
+function buildPermit(f,p,mgr3,role,status,canEdit){
+  const i2=['본인은 위험성 평가를 비롯하여 본 작업 활동과 관련하여 필요한 관리 양식들을 검토하였다.','본인은, 조치가 적절히 이루어졌는지 확실히 하기 위해 관계자와 협의하였다.','본인은, 첨부된 위험성 평가 및 해당 관리 양식에 따라 본 작업 활동을 조정 및 관리할 능력이 있다.','본인은 작업자 및 작업에 영향을 받는 사람의 건강 및 안전을 확보하기 위해 필요한 모든 조치를 취할것이다.','본인은, 작업 수행자가 위험성 평가 및 각 관리 양식은 물론 아래 Section 5 의 지시사항에 대한 설명을 들었고 해당 내용들을 이해했음을 확인하여야 한다.','본인은, 작업 활동 전체에 걸쳐 위험요소를 관찰하고 관리하여야 한다.','본인은, 당 작업 허가 승인 담당자에게 본 허가서를 검토하고, 등록 및 번호를 부여하도록 요청하는 바이다.'];
+  const i3=['본인은, 위험성 평가 및 필요한 관리 양식을 포함하여 관련된 모든 문서들의 내용을 검토하였으며 작업 업체/작업자에게 의견을 제시하였다.','본인은, 작업 업체/작업자를 담당하는 자로서, 작업 방식과 제안된 관리방안들이 시행되는 것을 모니터링하여 BNCT 터미널 안전 기준이 달성될 수 있도록 할 것이다.','본인은, 해당 작업 구역의 관련자에게 작업 시행 구간, 작업 업체/작업자가 완결해야 할 모든 작업 내역, 작업 관리감독 및 강화를 위해 수립된 절차들에 대한 정보를 알려주었다.'];
+  const i4=['본인은, 위험성 평가를 비롯하여 필요한 관리 양식을 포함한 모든 관련 문서 내용을 검토하였다.','본인은 당 작업 허가서를 등록하고, 작업 번호를 부여하였으며, 관련된 모든 문서 상에 해당 작업 번호를 기입하였다.'];
+  const s3Done=!!p.s3_signed_at,s4Done=!!p.s4_signed_at;
+  const s5=safeJSON(p.s5_to_s10,{});
+  const s2C=safeJSON(f.s2_checks,[]),s3C=safeJSON(p.s3_checks,[]),s4C=safeJSON(p.s4_checks,[]);
+  const canS3=role==='s3'&&status==='pending_s3';
+  const canS4=role==='s4'&&status==='pending_s4';
+  const canActive=role==='active'&&(status==='active'||status==='completed');
+  const cb=(c,d,l)=>c?`<span class="badge edit">✏ ${l} 필요</span>`:d?`<span class="badge done-mark">✅ 완료</span>`:`<span class="badge wait">대기중</span>`;
+  const mkSig=(id,e)=>`<div class="sigrow" style="${e?'':'background:var(--gray1);'}">
+    <div class="si"><div class="si-lbl">이름</div><input id="${id}n" value="${esc(s5[id+'n']||'')}" ${!e?'readonly':''} style="${!e?'background:var(--gray1);':''}"></div>
+    <div class="si"><div class="si-lbl">서명</div><div class="sigpad${e?'':' ro'}" style="height:54px;" ${e?'onclick="openSig(this)"':''}>
+      <canvas id="sig-${id}" width="260" height="54"></canvas>
+      ${e?`<div class="sighint">🖊 클릭하여 서명</div><button class="sig-clear" onclick="clrSig(event,'sig-${id}')">지우기</button>`:'<div class="sighint">서명</div>'}
     </div></div>
-    <div class="si"><div class="si-lbl">날짜</div><input id="${id}d" type="date" value="${s5[id+'d']||''}" ${!canEdit?'readonly':''}></div>
-    <div class="si"><div class="si-lbl">시간</div><input id="${id}t" type="time" value="${s5[id+'t']||''}" ${!canEdit?'readonly':''}></div>
+    <div class="si"><div class="si-lbl">날짜</div><input id="${id}d" type="date" value="${esc(s5[id+'d']||'')}" ${!e?'readonly':''} style="${!e?'background:var(--gray1);':''}"></div>
+    <div class="si"><div class="si-lbl">시간</div><input id="${id}t" type="time" value="${esc(s5[id+'t']||'')}" ${!e?'readonly':''} style="${!e?'background:var(--gray1);':''}"></div>
   </div>`;
+
+  const p1=`<div class="card"><div class="card-hdr permit1"><span>📄 작업허가서 양식</span><span class="badge">Page 1 of 2</span></div><div class="card-body">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><div style="border:1.5px solid #999;display:flex;font-size:12px;border-radius:3px;overflow:hidden;"><div style="background:#003087;color:#fff;padding:4px 12px;font-weight:700;font-size:11px;">작업허가 번호</div><div style="padding:4px 16px;">${esc(f.permitNo||'')}</div></div></div>
+    <div style="border:1px solid #ccc;padding:7px 12px;font-size:12px;margin-bottom:10px;background:#fafafa;border-radius:3px;">본 양식은 상세 명시된 <strong>고위험군 작업</strong>에 대한 승인 및 전달 사항 등을 관리하기 위한 것이다.</div>
+    <div class="sec-hdr navy">Section 1: 일반 사항 <span class="badge done-mark" style="font-size:10px;">외주작업자 작성완료</span></div>
+    <table class="pt" style="margin-bottom:10px;">
+      <tr><th>작업명</th><td>${esc(f['s1-work']||'')}</td></tr>
+      <tr><th>작업 장소</th><td>${esc(f['s1-place']||'')}</td></tr>
+      <tr><th>작업 업체</th><td>${esc(f['s1-company']||p.company_name||'')}</td></tr>
+      <tr><th>예상 작업 기간</th><td>${esc(f['s1-from']||'')} ~ ${esc(f['s1-to']||'')}</td></tr>
+    </table>
+    <div style="border:1px solid #ccc;padding:9px 12px;font-size:12px;margin-bottom:10px;border-radius:3px;">
+      <div style="font-weight:700;margin-bottom:6px;">고위험군 작업 선택:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;">
+        ${['화기 작업','토공/굴착 작업','밀폐공간출입작업','설비/장비 격리','고소 작업','기계적 인양 작업','고압 스위치 접근 및 시험 작업 허가','전기 유지보수작업'].map(t=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;"><input type="checkbox" disabled style="width:13px;height:13px;"> ${t}</label>`).join('')}
+      </div>
+    </div>
+    <div class="sec-hdr navy">Section 2: 승인 요청 (작업 업체 관리 감독자 작성) <span class="badge done-mark" style="font-size:10px;">외주작업자 작성완료</span></div>
+    <div class="checklist" style="margin-bottom:8px;">
+      ${i2.map((t,i)=>`<label class="ro"><input type="checkbox"${s2C.includes(i)?' checked':''} disabled style="width:14px;height:14px;"> <span style="font-size:12px;">${t}</span></label>`).join('')}
+    </div>
+    <div class="sigrow" style="background:#f0f4f8;">
+      <div class="si"><div class="si-lbl">이름</div><input value="${esc(f['s2-name']||'')}" readonly></div>
+      <div class="si"><div class="si-lbl">서명</div><div class="sigpad ro" style="height:54px;"><canvas id="sig-s2" width="260" height="54"></canvas><div class="sighint">서명</div></div></div>
+      <div class="si"><div class="si-lbl">날짜</div><input type="date" value="${esc(f['s2-date']||'')}" readonly></div>
+      <div class="si"><div class="si-lbl">시간</div><input type="time" value="${esc(f['s2-time']||'')}" readonly></div>
+    </div>
+    <div class="sec-hdr blue" style="margin-top:14px;">Section 3: 작업업체 검토 (업무담당자 작성) ${cb(canS3,s3Done,'서명')}</div>
+    ${!s3Done&&!canS3?'<div class="alert alert-warn">⏳ Section 3 서명 대기 중입니다.</div>':''}
+    <div class="checklist" style="margin-bottom:8px;">
+      ${i3.map((t,i)=>canS3?`<label><input type="checkbox" id="c3-${i}" style="width:14px;height:14px;"> <span style="font-size:12px;">${t}</span></label>`:`<label class="ro"><input type="checkbox"${s3C.includes(i)?' checked':''} disabled style="width:14px;height:14px;"> <span style="font-size:12px;">${t}</span></label>`).join('')}
+    </div>
+    <div class="sigrow">
+      <div class="si"><div class="si-lbl">이름</div><input id="s3n" value="${esc(p.s3_name||mgr3)}" ${!canS3?'readonly':''} style="${!canS3?'background:var(--gray1);color:var(--navy);font-weight:700;':''}"></div>
+      <div class="si"><div class="si-lbl">서명</div><div class="sigpad${canS3?'':' ro'}" style="height:54px;" ${canS3?'onclick="openSig(this)"':''}>
+        <canvas id="sig-s3" width="260" height="54"></canvas>
+        ${canS3?'<div class="sighint">🖊 클릭하여 서명</div><button class="sig-clear" onclick="clrSig(event,\'sig-s3\')">지우기</button>':'<div class="sighint">서명</div>'}
+      </div></div>
+      <div class="si"><div class="si-lbl">날짜</div><input id="s3d" type="date" value="${esc(p.s3_date||TODAY)}" ${!canS3?'readonly':''} style="${!canS3?'background:var(--gray1);':''}"></div>
+      <div class="si"><div class="si-lbl">시간</div><input id="s3t" type="time" value="${esc(p.s3_time||NOWT)}" ${!canS3?'readonly':''} style="${!canS3?'background:var(--gray1);':''}"></div>
+    </div>
+    <div class="sec-hdr blue2" style="margin-top:14px;">Section 4: 승인 (작업허가 승인 담당자 작성) ${cb(canS4,s4Done,'서명')}</div>
+    ${!s4Done&&!canS4?'<div class="alert alert-warn">⏳ Section 4 서명 대기 중입니다.</div>':''}
+    <div class="checklist" style="margin-bottom:8px;">
+      ${i4.map((t,i)=>canS4?`<label><input type="checkbox" id="c4-${i}" style="width:14px;height:14px;"> <span style="font-size:12px;">${t}</span></label>`:`<label class="ro"><input type="checkbox"${s4C.includes(i)?' checked':''} disabled style="width:14px;height:14px;"> <span style="font-size:12px;">${t}</span></label>`).join('')}
+    </div>
+    <div class="sigrow">
+      <div class="si"><div class="si-lbl">이름</div><input id="s4n" value="${esc(p.s4_name||'이병문')}" ${!canS4?'readonly':''} style="${!canS4?'background:var(--gray1);color:var(--blue2);font-weight:700;':''}"></div>
+      <div class="si"><div class="si-lbl">서명</div><div class="sigpad${canS4?'':' ro'}" style="height:54px;" ${canS4?'onclick="openSig(this)"':''}>
+        <canvas id="sig-s4" width="260" height="54"></canvas>
+        ${canS4?'<div class="sighint">🖊 클릭하여 서명</div><button class="sig-clear" onclick="clrSig(event,\'sig-s4\')">지우기</button>':'<div class="sighint">서명</div>'}
+      </div></div>
+      <div class="si"><div class="si-lbl">날짜</div><input id="s4d" type="date" value="${esc(p.s4_date||TODAY)}" ${!canS4?'readonly':''} style="${!canS4?'background:var(--gray1);':''}"></div>
+      <div class="si"><div class="si-lbl">시간</div><input id="s4t" type="time" value="${esc(p.s4_time||NOWT)}" ${!canS4?'readonly':''} style="${!canS4?'background:var(--gray1);':''}"></div>
+    </div>
+    <div style="border:1px solid #ccc;border-top:none;padding:8px 12px;font-size:12px;border-radius:0 0 4px 4px;">
+      <strong>제한 사항:</strong> 본 작업 승인 사항은 아래 명시된 일시까지만 유효하다.
+      <div style="display:flex;gap:12px;margin-top:5px;flex-wrap:wrap;">
+        날짜: <input id="s4ld" type="date" value="${esc(p.s4_limit_date||'')}" ${!canS4&&!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;font-family:inherit;">
+        시간: <input id="s4lt" type="time" value="${esc(p.s4_limit_time||'')}" ${!canS4&&!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;font-family:inherit;">
+      </div>
+    </div>
+  </div></div>`;
+
+  const si5=['본인의 역할 및 업무, 작업 범위에 대해 숙지하여야 한다.','위험성 평가 및 관리 양식을 읽고, 설명을 들었으며, 이를 이해하고 있어야 한다.','각 조 작업을 시작할 때마다 현장 감독자에게 알려야 하며, 작업허가/출입 관련 지시 및 허가를 받아 작업을 시작하도록 한다.','교대 근무를 할 경우, 작업 시작 전/종료 후 서명한다. (Section 7 참고)','작업 하는 동안 새로운 위험요소가 발견되었다면, 즉시 해당 작업 업체/작업자들의 현장 감독자와 기타 작업과 연관된 당사자들에게 통보한다.'];
+  const p2=`<div class="card"><div class="card-hdr permit2"><span>📄 작업허가서 양식 (계속)</span><span class="badge">Page 2 of 2</span>${canActive?'<span class="badge edit">✏ 작성 가능</span>':''}</div><div class="card-body">
+    <div class="sec-hdr blue">Section 5: 작업허가/작업구역 출입관련 지시 사항</div>
+    <div style="font-size:12px;line-height:1.9;padding:4px 0 8px;">
+      ${si5.map((t,i)=>`<div style="display:flex;gap:8px;margin-bottom:2px;"><span style="font-weight:700;min-width:18px;color:var(--navy);">${i+1}.</span><span>${t}</span></div>`).join('')}
+    </div>
+    <div class="sec-hdr blue" style="margin-top:8px;">Section 6: 작업업체 관리감독자 ${canActive?'<span class="badge edit">✏</span>':''}</div>
+    <table class="pt">
+      <tr><th>작업시작 전 논의사항</th><td><textarea id="s6a" rows="2" style="width:100%;border:none;outline:none;font-size:12px;font-family:inherit;resize:none;" ${!canActive?'readonly':''}>${esc(s5.s6a||'')}</textarea></td></tr>
+      <tr><th>점검/확인 시점</th><td><input id="s6b" value="${esc(s5.s6b||'')}" ${!canActive?'readonly':''} style="width:100%;border:none;outline:none;font-size:12px;font-family:inherit;"></td></tr>
+      <tr><th>최종 점검</th><td><div style="display:flex;gap:10px;align-items:center;font-size:12px;">날짜: <input id="s6c" type="date" value="${esc(s5.s6c||'')}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ddd;outline:none;font-size:12px;font-family:inherit;"> 시간: <input id="s6d" type="time" value="${esc(s5.s6d||'')}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ddd;outline:none;font-size:12px;font-family:inherit;"></div></td></tr>
+      <tr><th>변화/변경사항</th><td><textarea id="s6e" rows="2" style="width:100%;border:none;outline:none;font-size:12px;font-family:inherit;resize:none;" ${!canActive?'readonly':''}>${esc(s5.s6e||'')}</textarea></td></tr>
+    </table>
+    <div class="sec-hdr blue2" style="margin-top:10px;">Section 7: 허가 기간 연장 ${canActive?'<span class="badge edit">✏</span>':''}</div>
+    <div style="font-size:12px;padding:6px 2px;">기간 연장: <input id="s7f" type="date" value="${esc(s5.s7f||'')}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;margin:0 6px;"> 부터 <input id="s7t" type="date" value="${esc(s5.s7t||'')}" ${!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;margin:0 6px;"> (최대 7일)</div>
+    <div class="sec-hdr blue2" style="margin-top:10px;">Section 8: 작업 철수 ${canActive?'<span class="badge edit">✏</span>':''}</div>
+    <p style="font-size:12px;margin-bottom:6px;">해당 작업이 완결되어, 이를 모든 작업자에게 설명하였으며, 작업 현장은 안전하게 정돈되었다.</p>
+    ${mkSig('s8',canActive)}
+    <div class="sec-hdr blue2" style="margin-top:10px;">Section 9: 작업 종료 관련 ${canActive?'<span class="badge edit">✏</span>':''}</div>
+    <p style="font-size:12px;margin-bottom:6px;">본 작업 활동이 완결되어, 모든 작업자에게 설명하였으며, 작업 현장은 안전하게 정돈되었다.</p>
+    ${mkSig('s9',canActive)}
+    <div class="sec-hdr blue2" style="margin-top:10px;">Section 10: 작업 완료 허가 ${canActive?'<span class="badge edit">✏</span>':''}</div>
+    <p style="font-size:12px;margin-bottom:6px;">본 작업허가서와 연관된 모든 작업이 종결되었으며, 해당 문서들을 수령하였다.</p>
+    ${mkSig('s10',canActive)}
+  </div></div>`;
+  return p1+p2;
 }
+</script>
+<script>
+// ── 추가양식 빌더 ──
+function buildExtra(fm,f){
+  const extra=safeJSON(f['extra'],{}),pd=extra[fm.id]||{fields:{},checks:[]};
+  const flds=pd.fields||{},chks=pd.checks||[];
+  const fv=n=>esc(flds[n]||'');
+  const ck=n=>chks.includes(n);
+  const roCk=n=>`<input type="checkbox"${ck(n)?' checked':''} disabled style="width:14px;height:14px;vertical-align:middle;cursor:default;">`;
+  const secB=(t,cls='blu')=>`<div class="ex-sec ${cls}">${t}</div>`;
+  const subH=(t,na='')=>`<div class="ex-subhdr">${t}${na?`<label style="font-weight:400;font-size:10.5px;display:flex;align-items:center;gap:4px;">${roCk(na)} 아니오 (해당사항 없음)</label>`:''}</div>`;
+  const ynT=(items,prefix,hasTxt=false)=>{
+    const hdr=hasTxt?`<thead><tr><th>항목</th><th style="width:36px;text-align:center;">예</th><th style="width:44px;text-align:center;">아니오</th><th>비고</th></tr></thead>`:`<thead><tr><th>항목</th><th style="width:36px;text-align:center;">예</th><th style="width:44px;text-align:center;">아니오</th></tr></thead>`;
+    return `<table class="ex-tbl">${hdr}<tbody>${items.map((t,i)=>`<tr><td style="font-size:11px;line-height:1.5;">${t}</td><td style="text-align:center;">${roCk(prefix+'_y'+i)}</td><td style="text-align:center;">${roCk(prefix+'_n'+i)}</td>${hasTxt?`<td style="font-size:11px;">${fv(prefix+'_txt'+i)}</td>`:''}</tr>`).join('')}</tbody></table>`;
+  };
+  const titles={hotwork:'화기작업 양식',height:'고소작업 양식',electric:'전기 유지보수 작업 양식(전원이 켜진 장비)',lifting:'기계적 인양 작업 양식'};
+  let inner='';
 
-// ── 추가양식 스타일 ──────────────────────────────────
-var extraCSS = `
-.ex-wrap{font-family:'Malgun Gothic','맑은 고딕','Noto Sans KR',sans-serif;font-size:12px;color:#111;}
-.ex-title-bar{display:flex;align-items:center;gap:10px;border:2px solid #c00;padding:6px 10px;margin-bottom:8px;}
-.ex-badge{background:#c00;color:white;font-size:11px;font-weight:700;padding:3px 8px;border-radius:2px;}
-.ex-title{font-size:18px;font-weight:900;letter-spacing:1px;}
-.ex-permitno{display:flex;justify-content:flex-end;margin-bottom:8px;}
-.ex-permitno-box{border:1.5px solid #555;display:flex;align-items:center;}
-.ex-permitno-label{background:#f0f0f0;padding:4px 10px;font-weight:700;border-right:1px solid #555;font-size:11px;}
-.ex-permitno-val{padding:4px 40px;font-size:11px;}
-.ex-sec{background:#1a5276;color:white;padding:5px 10px;font-weight:700;font-size:12px;margin:8px 0 4px;}
-.ex-sec.green{background:#1a6b2a;}
-.ex-sec.red{background:#922b21;}
-.ex-sec.orange{background:#784212;}
-.ex-sec.purple{background:#4a235a;}
-.ex-tbl{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:4px;}
-.ex-tbl th{background:#dce6f1;padding:5px 8px;border:1px solid #aaa;font-weight:700;text-align:left;white-space:nowrap;}
-.ex-tbl td{padding:5px 8px;border:1px solid #aaa;vertical-align:top;}
-.ex-tbl th.center,.ex-tbl td.center{text-align:center;width:40px;}
-.ex-notice{background:#fef9e7;border:1px solid #f0c040;padding:6px 10px;font-size:11.5px;margin-bottom:6px;line-height:1.6;}
-.ex-chkrow{display:flex;align-items:flex-start;gap:6px;padding:3px 0;font-size:11.5px;line-height:1.5;}
-.ex-chkrow input{margin-top:2px;flex-shrink:0;}
-.ex-subhead{font-weight:700;font-size:11.5px;padding:4px 0 2px;}
-.ex-sigrow{display:grid;grid-template-columns:120px 1fr 120px 120px;gap:6px;border:1px solid #aaa;padding:6px 8px;margin-top:4px;background:#fafafa;}
-.ex-si{display:flex;flex-direction:column;gap:3px;}
-.ex-si-lbl{font-size:10px;font-weight:700;color:#555;}
-.ex-si-val{font-size:11.5px;padding:3px 0;border-bottom:1px solid #ccc;min-height:20px;}
-.ex-yn-row{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-bottom:1px solid #eee;font-size:11.5px;}
-.ex-yn-btns{display:flex;gap:12px;}
-.ex-yn-btns label{display:flex;align-items:center;gap:3px;font-size:11.5px;}
-`;
+  if(fm.type==='hotwork'){
+    const s2=['소화기는 화기 작업 지점 10m 이내에 비치한다.','작은 불티, 슬래그를 차단하기 위해 용접방화포나 불티 방지막을 바닥이나 철망판 위에 설치한다.','가연성 물질 또는 연료원은 작업장소로부터 격리시킬 것 (작업장소 표면, 위, 아래 포함 주변 15m 정도의 공간을 고려할 것)','배수관, 전선 및 가연성 물질은 덮어둔다. (작업장소 표면, 위, 아래 포함 주변 15m 정도의 공간을 고려해 방화 담요, 불티 방지막 등을 이용한다.)','소방호스를 작업지점까지 끌어다두고 사용할 준비를 해둔다 (야외작업의 경우에 적합하며 전기 장비가 없는 곳)','화재 감시자는 작업 중 또는/그리고 작업 완료 후에 작업 구역을 주시한다 (화재 위험, 불티, 슬래그, 뜨거운 물체가 있는지 살펴보기)'];
+    const s3=['설비에 인접하여 화기작업이 이루어지는 경우 격리 필요 (파이프, 탱크, 압력 용기 등)','작업 개시 전 화재방지 또는 화재탐지 시스템 격리 필요 (장기간 격리의 경우 보험사에 통지 고려)','작업 공간 세척, 불순물 제거, 환기 또는 작업전 가스 농도 측정 필요 (작업장 주변의 인화성/폭발성 기체, 먼지, 액체 또는 고체 잔여물 때문)','작업 개시 전 작업장소 준비 (청소, 코팅제거) 또는 작업 중 대기 모니터링 필요 (표면이 절단되거나 가열될 때 표면/코팅에서 유해한 물질이 배출될 경우)','작업 특성상 방독마스크 착용 필요','작업 특성상 가스 호스 또는 기타 민감한 시설/장비의 보호 조치 필요','아크 용접시, 작업 장소로 인한 감전 가능성을 최소화하기 위해 조치가 필요한 경우 (물, 습기로 인한 경우, 주위 온도가 32도 이상인 경우, 등)'];
+    const s4=['장비는 밀폐 공간 밖에 설치(용접에 필요한 실린더, 호스 등) (단, 방독 마스크 제외)','환기장치를 사용할 경우, 환기장치의 후드를 오염원에 근접시킬 것','오염원을 밀폐공간에서 제거하여 오염원이 재순환하거나 다른 근로자들에게 해를 끼치지 못하게 할 것','아크 용접 작업이 장시간 중단될 경우, 전원을 끄고 호스 연결을 해체하고 가스 압력을 낮출 것','가스 용접/절단 작업이 장시간 중단될 경우, 토치와 실린더 밸브를 잠그고 토치와 호스 연결을 해체하고 가스 압력을 낮출 것'];
+    inner=secB('Section 1 – 일반사항')
+     +`<table class="ex-tbl"><tbody><tr><th style="width:120px;">작업명<br><small style="font-weight:400;">(작업 위험성 평가에 따름)</small></th><td colspan="3">${fv('s1_work')}</td></tr><tr><th>작업 장소</th><td colspan="3">${fv('s1_place')}</td></tr><tr><th>접근 제한</th><td colspan="3">${fv('s1_restrict')}</td></tr><tr><th>잠재적 발화원</th><td colspan="3"><div style="display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;"><label style="display:flex;gap:4px;align-items:center;">${roCk('src_spark')} 불꽃 (용접, 납땜 등)</label><label style="display:flex;gap:4px;align-items:center;">${roCk('src_slag')} 불티 또는 슬래그 (연마, 절단, 마찰교반용접 도구, 용접 등)</label><label style="display:flex;gap:4px;align-items:center;">${roCk('src_hot')} 뜨거운 물체 (금속 표면, 철판 등)</label><label style="display:flex;gap:4px;align-items:center;">${roCk('src_etc_chk')} 기타: ${fv('src_etc_txt')}</label></div></td></tr></tbody></table>`
+     +secB('Section 2 – 일반 화기작업 /발화요인 통제')
+     +`<div style="font-size:10.5px;padding:3px 8px;border:1px solid #aab;border-top:none;background:#fffbe6;margin-bottom:3px;">일반 화기 작업 및 발화 통제가 필요한 경우: YES 또는 N/A(해당사항없음)으로 표기</div>`
+     +ynT(s2,'s2',true)
+     +secB('Section 3 – 특정 화기작업 /발화요인 통제')+ynT(s3,'s3',true)
+     +`<div class="ex-sec blu" style="display:flex;justify-content:space-between;align-items:center;"><span>Section 4 – 추가 조치 (밀폐 공간의 경우)</span><label style="font-weight:400;font-size:10.5px;display:flex;align-items:center;gap:4px;">${roCk('s4_na')} 아니오 (해당사항없을경우)</label></div>`
+     +ynT(s4,'s4',false);
 
-function getExtraData(f, fmId) {
-  var extra = {}; try { extra = JSON.parse(f['extra']||'{}'); } catch(e) {}
-  var pd = extra[fmId] || { inputs:{}, checks:[] };
-  var idx = {i:0, c:0};
-  function iv() { return pd.inputs[idx.i++]||''; }
-  function ck() { var r=pd.checks.includes(idx.c); idx.c++; return r; }
-  return {iv, ck};
-}
+  }else if(fm.type==='height'){
+    const aerial=['작업자의 머리 위쪽에 위치한 전선, 구조물, 움직이는 장비 등의 위험요소로부터 최소 안전거리를 유지해야 한다','고소작업차를 평평한 곳에 설치하기 위해 특정 조치가 필요하다','(사람이나 장비 접근을 방지하기 위해) 고소작업차 주위에 바리케이트 또는 표지판을 설치해야한다.','붐 길이가 11m 이상이어서 면허증을 가진 고소작업차 기사가 필요하다.','고소작업차를 사용하는 작업자는 고소작업차 설치, 통제 및 비상 탈출에 대해 숙지하고 있다.','기타:'];
+    const scT=['시스템 비계 (설계가 규격화되어 있으며 일반적인 구조)','이동식 비계 (이동가능한 비계)','강관 비계(강관의 길이 및 클램프 종류, 비계 구조 다양함)','복잡한 구조의 비계 (캔틸레버, 걸침비계 등 복잡한 구조)'];
+    const scA=['비계는 자격증이 있는 작업자가 설치하고 해체한다 (작업발판 높이 4m 이상인 경우 의무사항)','비계 설치 계획을 작성한다.','비계 설치 및 해체 시 낙하 사고 예방을 위해 주변에 바리케이트를 설치한다.','비계 절차는 안전한 비계 접근 상황을 확인하기 위해 사용된다.','비계 설치 및 해체 작업자의 안전을 위해 아래 사항을 적용한다.'];
+    const rT=['발판 가장자리 주위 또는 지붕 가장자리에 고정형 안전난간(핸드레일/가드레일)','개구부 주위 이동형 안전난간 설치','개구부에 개폐형 덮개 설치 (사람이 올라가거나 사물 적재 시)'];
+    const rA=['개폐형 덮개를 고정시키고 개구부 주의 안내를 위해 별도 조치 필요','추락 위험이 없는 안전한 장소에서 안전난간을 설치하기 위해 별도 조치 필요','안전난간 설치의 특성상 반드시 자격증을 소지한 비계 기능사가 임시 안전난간을 설치해야한다.'];
+    const fT=['추락 억제 시스템 - (그네식 안전대 사용, 적절한 고정/부착 설비, 작업자 지면 접촉 방지를 위한 죔줄)','추락 저지 시스템 – (하네스, 로프, 충격흡수 장치, 앵커 사용)'];
+    const drop=['접근 통제를 위한 임시 네트 설치','고소작업을 위한 자동죔줄(안전블록)','낙하물 방지망','지붕이나 설비의 날카로운 가장자리를 덮는 커버','머리 보호대','통제 구역 접근 허가/승인','경고 사인/바리케이트 필요','특정 조명 필요','기타:'];
+    inner=secB('Section 1 – 고소작업 / 접근 방법')
+     +`<table class="ex-tbl"><tbody><tr><th style="width:130px;">작업명<br><small style="font-weight:400;">(작업 위험성 평가에 따름)</small></th><td>${fv('s1_work')}</td></tr><tr><th>작업 유형<br><small style="font-weight:400;">(접근 사유)</small></th><td>${fv('s1_type')}</td></tr><tr><th>작업 장소/위치</th><td>${fv('s1_loc')}</td></tr><tr><th>접근 방법/ 고소 작업</th><td>${fv('s1_access')}</td></tr></tbody></table>`
+     +secB('Section 2 – 고소작업 및 접근 허가 관련 요구사항')
+     +`<div style="font-size:10.5px;padding:3px 8px;border:1px solid #aab;border-top:none;background:#f5f5f5;margin-bottom:3px;">필요한 조치 사항에 표시할 것</div>`
+     +subH('고소작업차 관련 요구사항','aerial_na')
+     +`<table class="ex-tbl"><thead><tr><th>고소작업차 관련 조치</th><th style="width:36px;text-align:center;">예</th><th style="width:44px;text-align:center;">아니오</th><th>'예'에 표시한 경우, 상세 조치 내용</th></tr></thead><tbody>${aerial.map((t,i)=>`<tr><td style="font-size:11px;line-height:1.5;">${t}</td><td style="text-align:center;">${roCk('aerial_y'+i)}</td><td style="text-align:center;">${roCk('aerial_n'+i)}</td><td style="font-size:11px;">${fv('aerial_txt'+i)}</td></tr>`).join('')}</tbody></table>`
+     +subH('비계 관련 요구사항','scaffold_na')
+     +`<table class="ex-tbl"><thead><tr><th>비계 종류</th><th style="width:36px;text-align:center;">예</th><th style="width:44px;text-align:center;">아니오</th></tr></thead><tbody>${scT.map((t,i)=>`<tr><td style="font-size:11px;">${t}</td><td style="text-align:center;">${roCk('sct_y'+i)}</td><td style="text-align:center;">${roCk('sct_n'+i)}</td></tr>`).join('')}</tbody></table>`
+     +`<table class="ex-tbl"><thead><tr><th>비계 관련 조치</th><th style="width:36px;text-align:center;">예</th><th style="width:44px;text-align:center;">아니오</th></tr></thead><tbody>${scA.map((t,i)=>`<tr><td style="font-size:11px;">${t}</td><td style="text-align:center;">${roCk('sca_y'+i)}</td><td style="text-align:center;">${roCk('sca_n'+i)}</td></tr>`).join('')}</tbody></table>`
+     +subH('안전 난간 및 덮개 관련 사항','rail_na')
+     +`<table class="ex-tbl"><thead><tr><th>안전난간/덮개의 종류</th><th style="width:36px;text-align:center;">예</th><th style="width:44px;text-align:center;">아니오</th></tr></thead><tbody>${rT.map((t,i)=>`<tr><td style="font-size:11px;">${t}</td><td style="text-align:center;">${roCk('rlt_y'+i)}</td><td style="text-align:center;">${roCk('rlt_n'+i)}</td></tr>`).join('')}</tbody></table>`
+     +`<table class="ex-tbl"><thead><tr><th>가장자리 관련 또는 덮개 관련 조치</th><th style="width:36px;text-align:center;">예</th><th style="width:44px;text-align:center;">아니오</th><th>'예'에 표시한 경우, 상세 조치 내용</th></tr></thead><tbody>${rA.map((t,i)=>`<tr><td style="font-size:11px;">${t}</td><td style="text-align:center;">${roCk('rla_y'+i)}</td><td style="text-align:center;">${roCk('rla_n'+i)}</td><td style="font-size:11px;">${fv('rla_txt'+i)}</td></tr>`).join('')}</tbody></table>`
+     +subH('추락방지 장비','fall_na')
+     +`<table class="ex-tbl"><thead><tr><th>사용 예정인 추락방지 장비</th><th style="width:36px;text-align:center;">예</th><th style="width:44px;text-align:center;">아니오</th></tr></thead><tbody>${fT.map((t,i)=>`<tr><td style="font-size:11px;">${t}</td><td style="text-align:center;">${roCk('fall_y'+i)}</td><td style="text-align:center;">${roCk('fall_n'+i)}</td></tr>`).join('')}</tbody></table>`
+     +secB('낙하물 및 기타 예방조치')
+     +`<table class="ex-tbl"><thead><tr><th>기타 필요 물품</th><th style="width:36px;text-align:center;">예</th><th style="width:44px;text-align:center;">아니오</th><th>상세 조치 내용</th></tr></thead><tbody>${drop.map((t,i)=>`<tr><td style="font-size:11px;">${t}</td><td style="text-align:center;">${roCk('drop_y'+i)}</td><td style="text-align:center;">${roCk('drop_n'+i)}</td><td style="font-size:11px;">${fv('drop_txt'+i)}</td></tr>`).join('')}</tbody></table>`;
 
-function roChkBox(checked) {
-  return `<input type="checkbox"${checked?' checked':''} disabled style="width:14px;height:14px;">`;
-}
+  }else if(fm.type==='electric'){
+    const mand=['반드시 최신 설계도를 참고 해야함 (작업 개시 전)','자격증이 있는 전기 기술자만 작업 수행','설비/장비 책임자에게 반드시 알려야 함 (관련 매니저, 수석 엔지니어 등)','격리 지점에 필요한 표지 부착 (비상시 구조 목적)','구조 키트는 점검 후 가까운 위치에 배치(격리 지점 또는 작업 구역 인근)','점검 완료한 절연 테스트 도구 및 장비만 사용','모든 작업자가 금속 물질 제거해야만 함 (귀금속, 벨트 버클, 시계, 펜 등)','승인된 안전 관리자 (전기가 차단되지 않은 상태에서 작업을 하는 경우 입회, 작업의 성격·위험요인·격리 지점에 관해 설명, 작업 진행 동안 상시 대기, 관찰·경고·비상시 도움·접근통제 역할 이행)','안전보호구 필수 착용 구역에 들어갈 경우 작업자 및 안전 관리자는 반드시 방염복을 입어야 함(다른 보호 장비에도 금속이 포함되어서는 안됨)','전기 절연 장갑의 손상 유무 및 시험 전압 확인 (전류가 흐르는 고압에도 절연되는 장갑)','개인 안전 장구 필수 착용 구역에 머물 경우 작업자 및 안전 관리자는 자외선 차단 기능이 있는 안면보호대를 반드시 사용','작업 구역 접근 방지를 위해 바리케이드 반드시 설치'];
+    const add=[{l:'전도성이 있는 표면 또는 전기가 흐르는 부분에 인접한 곳에 위치해 있을 때 작업이 진행되므로:',s:['절연 고무 매트의 손상 유무 및 시험전압 확인 후 바닥 표면에 설치 해야함','전기가 흐르는 부분에 절연 바리케이드는 또는 접지된 쉴드를 설치 해야함'],p:'add0'},{l:'좁은 공간에서의 작업이므로:',s:['적절한 자세를 취하여 기침, 재채기 등으로 인해 전기가 흐르는 부분에 접촉하지 않도록 한다.','전기가 흐르는 부분에 절연 바리케이드는 또는 접지된 쉴드를 설치 해야함'],p:'add1'},{l:'대체 전기 공급원이 있으므로:',s:["대체 전기 공급원은 격리되어야 하며 '격리 지점' 표지판이 대체 전기 공급 격리 지점에 부착되어야 하며 또는 전기가 흐르는 부분에 절연 바리케이드가 설치되어야 함"],p:'add2'},{l:'콘덴서는 전류 방출이 필요하므로:',s:['적절한 방출 장비를 사용'],p:'add3'}];
+    inner=secB('Section 1 – 일반 사항')
+     +`<table class="ex-tbl"><tbody><tr><th style="width:110px;">작업명<br><small style="font-weight:400;">(작업 위험성 평가에 따름)</small></th><td>${fv('s1_work')}</td></tr></tbody></table>`
+     +secB('Section 2 – 전원이 켜진 장비의 유지 보수 관련 조치')
+     +`<table class="ex-tbl"><tbody><tr><th style="width:100px;">위치</th><td>${fv('s2_loc')}</td><th style="width:100px;">전원이 켜진 장비의 유지 보수 작업</th><td style="font-size:11px;line-height:1.6;">일부 또는 전체 장비의 전원이 켜진 상태에서 정비, 보수, 변경, 전기 장비 제거 또는 교체의 경우. (격리를 실행하거나 위험 평가 절차를 통한 전원 차단 여부를 확인하는 테스트의 경우 제외).</td></tr></tbody></table>`
+     +`<div style="display:flex;border:1px solid #aab;margin-top:6px;border-radius:3px;overflow:hidden;"><div style="background:#fff0e0;color:#c62828;font-weight:700;font-size:11px;padding:8px 10px;border-right:1px solid #aab;min-width:90px;display:flex;align-items:center;text-align:center;line-height:1.4;">반드시 필요한<br>조치에 대한<br>확인(계획/완료)</div><div style="padding:8px 12px;flex:1;">${mand.map((c,i)=>`<div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:6px;font-size:11px;line-height:1.5;">${roCk('mand'+i)} <span>${c}</span></div>`).join('')}</div></div>`
+     +secB('추가 조치 (작업의 성격에 따름)')
+     +`<table class="ex-tbl"><thead><tr><th>조치 내용</th><th style="width:36px;text-align:center;">예</th><th style="width:44px;text-align:center;">아니오</th><th>조치</th></tr></thead><tbody>${add.map(g=>`<tr><td style="font-size:11px;"><div style="font-weight:700;margin-bottom:3px;">${g.l}</div>${g.s.map(s=>`<div style="padding-left:8px;margin-top:2px;">• ${s}</div>`).join('')}</td><td style="text-align:center;">${roCk(g.p+'_y')}</td><td style="text-align:center;">${roCk(g.p+'_n')}</td><td style="font-size:11px;">${fv(g.p+'_txt')}</td></tr>`).join('')}</tbody></table>`
+     +secB('전기 계획 확인')
+     +`<div style="font-size:11px;padding:5px 8px;border:1px solid #aab;border-top:none;line-height:1.6;margin-bottom:4px;">전기 담당 책임자가 전류가 흐르는 전기 장비의 정비 작업에 대한 심도 깊은 검토를 이행하였으며 이는 전원을 차단하고 작업 수행을 할 수 없으며 본 조치 양식 및 관련 위험 평가서에 단계별 작업에 대한 설명 및 특정 조치 요구 사항 등에 관해 기술하고 있음을 확인 하기 위한 것이었음.</div>`
+     +`<table class="ex-tbl"><thead><tr><th style="width:110px;">확인</th><th>이름</th><th>서명</th><th>날짜</th><th>시각</th></tr></thead><tbody><tr><td style="font-size:11px;">전기 계획 완료:<br><span style="font-size:9.5px;">(전기 담당 책임자)</span></td><td>${fv('conf_name')}</td><td style="min-width:80px;">&nbsp;</td><td>${fv('conf_date')}</td><td>${fv('conf_time')}</td></tr></tbody></table>`;
 
-function buildExtra(fm, f, ro) {
-  var extra = {}; try { extra = JSON.parse(f['extra']||'{}'); } catch(e) {}
-  var pd = extra[fm.id] || { inputs:{}, checks:[] };
-  var ii=0, ci=0;
-  function iv(){return pd.inputs[ii++]||'';}
-  function ck(){var r=(pd.checks||[]).includes(ci);ci++;return r;}
-
-  var inner = '';
-
-  if (fm.type === 'hotwork') {
-    // ── 화기작업 양식 ── 원본 PDF 완전 재현
-    var s1_work=iv(), s1_place=iv(), s1_restrict=iv();
-    var src_spark=ck(), src_slag=ck(), src_hot=ck(); var src_etc=iv();
-
-    // Section 2 일반 화기작업
-    var gen2 = [
-      '소화기는 화기 작업 지점 10m 이내에 비치한다.',
-      '작은 불티, 슬래그를 차단하기 위해 용접방화포나 불티 방지막을 바닥이나 철망판 위에 설치한다.',
-      '가연성 물질 또는 연료원은 작업장소로부터 격리시킬 것 (작업장소 표면, 위, 아래 포함 주변 15m 정도의 공간을 고려할 것)',
-      '배수관, 전선 및 가연성 물질은 덮어둔다. (작업장소 표면, 위, 아래 포함 주변 15m 정도의 공간을 고려해 방화 담요, 불티 방지막 등을 이용한다.)',
-      '소방호스를 작업지점까지 끌어다두고 사용할 준비를 해둔다 (야외작업의 경우에 적합하며 전기 장비가 없는 곳)',
-      '화재 감시자는 작업 중 또는/그리고 작업 완료 후에 작업 구역을 주시한다 (화재 위험, 불티, 슬래그, 뜨거운 물체가 있는지 살펴보기)'
-    ];
-    var g2yn=[]; gen2.forEach(()=>{ g2yn.push({y:ck(),n:ck(),txt:iv()}); });
-
-    // Section 3 특정 화기작업
-    var spec3 = [
-      '설비에 인접하여 화기작업이 이루어지는 경우 격리 필요 (파이프, 탱크, 압력 용기 등)',
-      '작업 개시 전 화재방지 또는 화재탐지 시스템 격리 필요 (장기간 격리의 경우 보험사에 통지 고려)',
-      '작업 공간 세척, 불순물 제거, 환기 또는 작업전 가스 농도 측정 필요 (작업장 주변의 인화성/폭발성 기체, 먼지, 액체 또는 고체 잔여물 때문)',
-      '작업 개시 전 작업장소 준비 (청소, 코팅제거) 또는 작업 중 대기 모니터링 필요 (표면이 절단되거나 가열될 때 표면/코팅에서 유해한 물질이 배출될 경우)',
-      '작업 특성상 방독마스크 착용 필요',
-      '작업 특성상 가스 호스 또는 기타 민감한 시설/장비의 보호 조치 필요',
-      '아크 용접시, 작업 장소로 인한 감전 가능성을 최소화하기 위해 조치가 필요한 경우 (물, 습기로 인한 경우, 주위 온도가 32도 이상인 경우 등)'
-    ];
-    var s3yn=[]; spec3.forEach(()=>{ s3yn.push({y:ck(),n:ck(),txt:iv()}); });
-
-    // Section 4 밀폐공간
-    var s4na=ck();
-    var sec4 = [
-      '장비는 밀폐 공간 밖에 설치(용접에 필요한 실린더, 호스 등) (단, 방독 마스크 제외)',
-      '환기장치를 사용할 경우, 환기장치의 후드를 오염원에 근접시킬 것',
-      '오염원을 밀폐공간에서 제거하여 오염원이 재순환하거나 다른 근로자들에게 해를 끼치지 못하게 할 것',
-      '아크 용접 작업이 장시간 중단될 경우, 전원을 끄고 호스 연결을 해체하고 가스 압력을 낮출 것',
-      '가스 용접/절단 작업이 장시간 중단될 경우, 토치와 실린더 밸브를 잠그고 토치와 호스 연결을 해체하고 가스 압력을 낮출 것'
-    ];
-    var s4yn=[]; sec4.forEach(()=>{ s4yn.push({y:ck(),n:ck()}); });
-
-    inner = `
-      <div class="ex-permitno"><div class="ex-permitno-box"><div class="ex-permitno-label">작업허가 번호</div><div class="ex-permitno-val"></div></div></div>
-
-      <div class="ex-sec">Section 1 – 일반사항</div>
-      <table class="ex-tbl">
-        <tr><th style="width:100px;">작업명<br><span style="font-weight:400;font-size:10px;">(작업 위험성 평가에 따름)</span></th><td colspan="3">${s1_work}</td></tr>
-        <tr><th>작업 장소</th><td colspan="3">${s1_place}</td></tr>
-        <tr><th>접근 제한<br><span style="font-weight:400;font-size:10px;">(특정 용접 작업 또는 위험지역이나 선장의 허가가 필요한 선박에서의 화기 작업으로 인한 경우)</span></th><td colspan="3">${s1_restrict}</td></tr>
-        <tr><th>잠재적 발화원</th><td colspan="3">
-          <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;">
-            <label style="display:flex;gap:4px;align-items:center;">${roChkBox(src_spark)} 불꽃 (용접, 납땜 등)</label>
-            <label style="display:flex;gap:4px;align-items:center;">${roChkBox(src_slag)} 불티 또는 슬래그 (연마, 절단, 마찰교반용접 도구, 용접 등)</label>
-            <label style="display:flex;gap:4px;align-items:center;">${roChkBox(src_hot)} 뜨거운 물체 (금속 표면, 철판 등)</label>
-            <span>기타: ${src_etc}</span>
-          </div>
-        </td></tr>
-      </table>
-
-      <div class="ex-sec">Section 2 – 일반 화기작업 /발화요인 통제</div>
-      <div style="font-size:11px;padding:3px 6px;margin-bottom:4px;color:#555;">일반 화기 작업 및 발화 통제가 필요한 경우: YES 또는 N/A(해당사항없음)으로 표기</div>
-      <table class="ex-tbl">
-        <thead><tr><th>조치 내용</th><th class="center">예</th><th class="center">아니오</th><th>조치</th></tr></thead>
-        <tbody>
-          ${g2yn.map((r,i)=>`<tr><td style="font-size:11px;">${gen2[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td><td style="font-size:11px;">${r.txt}</td></tr>`).join('')}
-        </tbody>
-      </table>
-
-      <div class="ex-sec">Section 3 – 특정 화기작업 /발화요인 통제</div>
-      <table class="ex-tbl">
-        <thead><tr><th>필요한 조치</th><th class="center">예</th><th class="center">아니오</th><th>예에 표시한 경우, 조치 관련 설명 기재할 것</th></tr></thead>
-        <tbody>
-          ${s3yn.map((r,i)=>`<tr><td style="font-size:11px;">${spec3[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td><td style="font-size:11px;">${r.txt}</td></tr>`).join('')}
-        </tbody>
-      </table>
-
-      <div class="ex-sec" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>Section 4 – 추가 조치 (밀폐 공간의 경우)</span>
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;">${roChkBox(s4na)} 아니오 (해당사항없을경우)</label>
-      </div>
-      <table class="ex-tbl">
-        <thead><tr><th>필요한 조치</th><th class="center">예</th><th class="center">아니오</th></tr></thead>
-        <tbody>
-          ${s4yn.map((r,i)=>`<tr><td style="font-size:11px;">${sec4[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td></tr>`).join('')}
-        </tbody>
-      </table>`;
-
-  } else if (fm.type === 'height') {
-    // ── 고소작업 양식 (2페이지) ── 원본 PDF 완전 재현
-    var s1w=iv(),s1t=iv(),s1loc=iv(),s1acc=iv();
-
-    // Section 2 고소작업차
-    var s2na=ck();
-    var aerial=[
-      '작업자의 머리 위쪽에 위치한 전선, 구조물, 움직이는 장비 등의 위험요소로부터 최소 안전거리를 유지해야 한다',
-      '고소작업차를 평평한 곳에 설치하기 위해 특정 조치가 필요하다',
-      '(사람이나 장비 접근을 방지하기 위해) 고소작업차 주위에 바리케이트 또는 표지판을 설치해야한다.',
-      '붐 길이가 11m 이상이어서 면허증을 가진 고소작업차 기사가 필요하다.',
-      '고소작업차를 사용하는 작업자는 고소작업차 설치, 통제 및 비상 탈출에 대해 숙지하고 있다.',
-      '기타:'
-    ];
-    var aerialYN=[]; aerial.forEach(()=>{ aerialYN.push({y:ck(),n:ck(),txt:iv()}); });
-
-    // 비계 관련
-    var scaffold_na=ck();
-    var scTypes=['시스템 비계 (설계가 규격화되어 있으며 일반적인 구조)','이동식 비계 (이동가능한 비계)','강관 비계(강관의 길이 및 클램프 종류, 비계 구조 다양함)','복잡한 구조의 비계 (캔틸레버, 걸침비계 등 복잡한 구조)'];
-    var scTypeYN=[]; scTypes.forEach(()=>{scTypeYN.push({y:ck(),n:ck()});});
-    var scActs=[
-      '비계는 자격증이 있는 작업자가 설치하고 해체한다 (작업발판 높이 4m 이상인 경우 의무사항)',
-      '비계 설치 계획을 작성한다.',
-      '비계 설치 및 해체 시 낙하 사고 예방을 위해 주변에 바리케이트를 설치한다.',
-      '비계 절차는 안전한 비계 접근 상황을 확인하기 위해 사용된다.',
-      '비계 설치 및 해체 작업자의 안전을 위해 아래 사항을 적용한다.'
-    ];
-    var scActYN=[]; scActs.forEach(()=>{scActYN.push({y:ck(),n:ck()});});
-
-    // 안전 난간
-    var rail_na=ck();
-    var railTypes=['발판 가장자리 주위 또는 지붕 가장자리에 고정형 안전난간(핸드레일/가드레일)','개구부 주위 이동형 안전난간 설치','개구부에 개폐형 덮개 설치 (사람이 올라가거나 사물 적재 시)'];
-    var railTypeYN=[]; railTypes.forEach(()=>{railTypeYN.push({y:ck(),n:ck()});});
-    var railActs=[
-      '개폐형 덮개를 고정시키고 개구부 주의 안내를 위해 별도 조치 필요',
-      '추락 위험이 없는 안전한 장소에서 안전난간을 설치하기 위해 별도 조치 필요',
-      '안전난간 설치의 특성상 반드시 자격증을 소지한 비계 기능사가 임시 안전난간을 설치해야한다.'
-    ];
-    var railActYN=[]; railActs.forEach(()=>{railActYN.push({y:ck(),n:ck(),txt:iv()});});
-
-    // 추락방지
-    var fall_na=ck();
-    var fallTypes=['추락 억제 시스템 - (그네식 안전대 사용, 적절한 고정/부착 설비, 작업자 지면 접촉 방지를 위한 죔줄)','추락 저지 시스템 – (하네스, 로프, 충격흡수 장치, 앵커 사용)'];
-    var fallYN=[]; fallTypes.forEach(()=>{fallYN.push({y:ck(),n:ck()});});
-
-    // 낙하물
-    var dropItems=['접근 통제를 위한 임시 네트 설치','고소작업을 위한 자동죔줄(안전블록)','낙하물 방지망','지붕이나 설비의 날카로운 가장자리를 덮는 커버','머리 보호대','통제 구역 접근 허가/승인','경고 사인/바리케이트 필요','특정 조명 필요','기타:'];
-    var dropYN=[]; dropItems.forEach(()=>{dropYN.push({y:ck(),n:ck(),txt:iv()});});
-
-    inner = `
-      <div class="ex-permitno"><div class="ex-permitno-box"><div class="ex-permitno-label">작업허가 번호</div><div class="ex-permitno-val"></div></div></div>
-
-      <div class="ex-sec">Section 1 – 고소작업 / 접근 방법</div>
-      <table class="ex-tbl">
-        <tr><th style="width:120px;">작업명<br><span style="font-weight:400;font-size:10px;">(작업 위험성 평가에 따름)</span></th><td colspan="3">${s1w}</td></tr>
-        <tr><th>작업 유형<br><span style="font-weight:400;font-size:10px;">(접근 사유)</span></th><td colspan="3">${s1t}</td></tr>
-        <tr><th>작업 장소/위치</th><td colspan="3">${s1loc}</td></tr>
-        <tr><th>접근 방법/ 고소 작업</th><td colspan="3">${s1acc}</td></tr>
-      </table>
-
-      <div class="ex-sec" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>Section 2 – 고소작업 및 접근 허가 관련 요구사항</span>
-      </div>
-      <div style="font-size:11px;padding:2px 4px;margin-bottom:2px;">필요한 조치 사항에 표시할 것</div>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;background:#dce6f1;padding:5px 8px;border:1px solid #aaa;font-weight:700;font-size:12px;">
-        고소작업차 관련 요구사항
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;">${roChkBox(s2na)} 아니오 (해당사항 없음)</label>
-      </div>
-      <table class="ex-tbl">
-        <thead><tr><th>고소작업차 관련 조치</th><th class="center">예</th><th class="center">아니오</th><th>'예'에 표시한 경우, 상세 조치 내용</th></tr></thead>
-        <tbody>
-          ${aerialYN.map((r,i)=>`<tr><td style="font-size:11px;">${aerial[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td><td style="font-size:11px;">${r.txt}</td></tr>`).join('')}
-        </tbody>
-      </table>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;background:#dce6f1;padding:5px 8px;border:1px solid #aaa;border-top:none;font-weight:700;font-size:12px;">
-        비계 관련 요구사항
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;">${roChkBox(scaffold_na)} 아니오 (해당사항 없음)</label>
-      </div>
-      <table class="ex-tbl">
-        <thead><tr><th>비계 종류</th><th class="center">예</th><th class="center">아니오</th></tr></thead>
-        <tbody>
-          ${scTypeYN.map((r,i)=>`<tr><td style="font-size:11px;">${scTypes[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td></tr>`).join('')}
-        </tbody>
-      </table>
-      <table class="ex-tbl" style="margin-top:0;">
-        <thead><tr><th>비계 관련 조치</th><th class="center">예</th><th class="center">아니오</th></tr></thead>
-        <tbody>
-          ${scActYN.map((r,i)=>`<tr><td style="font-size:11px;">${scActs[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td></tr>`).join('')}
-        </tbody>
-      </table>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;background:#dce6f1;padding:5px 8px;border:1px solid #aaa;border-top:none;font-weight:700;font-size:12px;margin-top:8px;">
-        안전 난간 및 덮개 관련 사항
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;">${roChkBox(rail_na)} 아니오 (해당사항 없음)</label>
-      </div>
-      <table class="ex-tbl">
-        <thead><tr><th>안전난간/덮개의 종류</th><th class="center">예</th><th class="center">아니오</th></tr></thead>
-        <tbody>${railTypes.map((t,i)=>`<tr><td style="font-size:11px;">${t}</td><td class="center">${roChkBox(railTypeYN[i].y)}</td><td class="center">${roChkBox(railTypeYN[i].n)}</td></tr>`).join('')}</tbody>
-      </table>
-      <table class="ex-tbl" style="margin-top:0;">
-        <thead><tr><th>가장자리 관련 또는 덮개 관련 조치</th><th class="center">예</th><th class="center">아니오</th><th>'예'에 표시한 경우, 상세 조치 내용</th></tr></thead>
-        <tbody>${railActYN.map((r,i)=>`<tr><td style="font-size:11px;">${railActs[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td><td style="font-size:11px;">${r.txt}</td></tr>`).join('')}</tbody>
-      </table>
-
-      <div style="display:flex;justify-content:space-between;align-items:center;background:#dce6f1;padding:5px 8px;border:1px solid #aaa;border-top:none;font-weight:700;font-size:12px;margin-top:8px;">
-        추락방지 장비
-        <label style="display:flex;align-items:center;gap:4px;font-size:11px;">${roChkBox(fall_na)} 아니오 (해당사항 없음)</label>
-      </div>
-      <table class="ex-tbl">
-        <thead><tr><th>사용 예정인 추락방지 장비</th><th class="center">예</th><th class="center">아니오</th></tr></thead>
-        <tbody>${fallYN.map((r,i)=>`<tr><td style="font-size:11px;">${fallTypes[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td></tr>`).join('')}</tbody>
-      </table>
-
-      <div class="ex-sec" style="margin-top:8px;">낙하물 및 기타 예방조치</div>
-      <table class="ex-tbl">
-        <thead><tr><th>기타 필요 물품</th><th class="center">예</th><th class="center">아니오</th><th>상세 조치 내용</th></tr></thead>
-        <tbody>${dropYN.map((r,i)=>`<tr><td style="font-size:11px;">${dropItems[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td><td style="font-size:11px;">${r.txt}</td></tr>`).join('')}</tbody>
-      </table>`;
-
-  } else if (fm.type === 'electric') {
-    // ── 전기 유지보수 작업 양식 ── 원본 PDF 완전 재현
-    var s1w=iv(), s2loc=iv();
-
-    var mandChecks=[
-      '반드시 최신 설계도를 참고 해야함 (작업 개시 전)',
-      '자격증이 있는 전기 기술자만 작업 수행',
-      '설비/장비 책임자에게 반드시 알려야 함 (관련 매니저, 수석 엔지니어 등)',
-      '격리 지점에 필요한 표지 부착 (비상시 구조 목적)',
-      '구조 키트는 점검 후 가까운 위치에 배치(격리 지점 또는 작업 구역 인근)',
-      '점검 완료한 절연 테스트 도구 및 장비만 사용',
-      '모든 작업자가 금속 물질 제거해야만 함 (귀금속, 벨트 버클, 시계, 펜 등)',
-      '승인된 안전 관리자: 전기가 차단되지 않은 상태에서 작업을 하는 경우 입회해야 함 / 작업의 성격, 위험요인, 작업 격리 지점에 관해 설명해야 함 / 작업이 진행되는 동안 상시 대기해야 함 / 어떤 전기 작업이 진행되는지 관찰하고, 위험 요소 발견 시 경고하며 비상시 도움을 주고 작업 구역 접근 통제 등의 역할을 반드시 이해해야 함',
-      '안전보호구 필수 착용 구역에 들어갈 경우 작업자 및 안전 관리자는 반드시 방염복을 입어야 함(다른 보호 장비에도 금속이 포함되어서는 안됨)',
-      '전기 절연 장갑의 손상 유무 및 시험 전압 확인 (전류가 흐르는 고압에도 절연되는 장갑)',
-      '개인 안전 장구 필수 착용 구역에 머물 경우 작업자 및 안전 관리자는 자외선 차단 기능이 있는 안면보호대를 반드시 사용',
-      '작업 구역 접근 방지를 위해 바리케이드 반드시 설치'
-    ];
-    var mandCK=[]; mandChecks.forEach(()=>{mandCK.push(ck());});
-
-    var addActs=[
-      ['전도성이 있는 표면 또는 전기가 흐르는 부분에 인접한 곳에 위치해 있을 때 작업이 진행되므로:', ['절연 고무 매트의 손상 유무 및 시험전압 확인 후 바닥 표면에 설치 해야함','전기가 흐르는 부분에 절연 바리케이드는 또는 접지된 쉴드를 설치 해야함']],
-      ['좁은 공간에서의 작업이므로:', ['적절한 자세를 취하여 기침, 재채기 등으로 인해 전기가 흐르는 부분에 접촉하지 않도록 한다.','전기가 흐르는 부분에 절연 바리케이드는 또는 접지된 쉴드를 설치 해야함']],
-      ['대체 전기 공급원이 있으므로:', ['대체 전기 공급원은 격리되어야 하며 \'격리 지점\' 표지판이 대체 전기 공급 격리 지점에 부착되어야 하며 또는 전기가 흐르는 부분에 절연 바리케이드가 설치되어야 함']],
-      ['콘덴서는 전류 방출이 필요하므로:', ['적절한 방출 장비를 사용']]
-    ];
-    var addYN=[]; addActs.forEach(()=>{addYN.push({y:ck(),n:ck(),txt:iv()});});
-
-    var confName=iv(), confDate=iv(), confTime=iv();
-
-    inner = `
-      <div class="ex-permitno"><div class="ex-permitno-box"><div class="ex-permitno-label">작업허가 번호</div><div class="ex-permitno-val"></div></div></div>
-
-      <div class="ex-sec">Section 1 – 일반 사항</div>
-      <table class="ex-tbl">
-        <tr><th style="width:100px;">작업명<br><span style="font-weight:400;font-size:10px;">(작업 위험성 평가에 따름)</span></th><td>${s1w}</td></tr>
-      </table>
-
-      <div class="ex-sec">Section 2 – 전원이 켜진 장비의 유지 보수 관련 조치</div>
-      <table class="ex-tbl">
-        <tr><th style="width:100px;">위치<br><span style="font-weight:400;font-size:10px;">(전원이 켜진 장비에 대한 정비 작업필요)</span></th>
-          <td style="width:40%">${s2loc}</td>
-          <th style="width:100px;">전원이 켜진 장비의 유지 보수 작업</th>
-          <td style="font-size:11px;">일부 또는 전체 장비의 전원이 켜진 상태에서 정비, 보수, 변경, 전기 장비 제거 또는 교체의 경우. (격리를 실행하거나 위험 평가 절차를 통한 전원 차단 여부를 확인하는 테스트의 경우 제외).</td>
-        </tr>
-      </table>
-
-      <table class="ex-tbl" style="margin-top:4px;">
-        <tr>
-          <th style="width:140px;background:#fff0e0;color:#c00;border:1px solid #aaa;vertical-align:top;">반드시 필요한<br>조치에 대한<br>확인(계획/완료)</th>
-          <td style="padding:4px 8px;">
-            ${mandChecks.map((t,i)=>`<div class="ex-chkrow">${roChkBox(mandCK[i])} <span>${t}</span></div>`).join('')}
-          </td>
-        </tr>
-        <tr>
-          <th style="background:#f5f5f5;">추가 조치<br><span style="font-weight:400;font-size:10px;">(작업의 성격에 따름)</span></th>
-          <td style="padding:0;">
-            <table style="width:100%;border-collapse:collapse;font-size:11px;">
-              <thead><tr><th style="border:1px solid #aaa;padding:4px;background:#dce6f1;">조치 내용</th><th style="border:1px solid #aaa;padding:4px;background:#dce6f1;width:30px;text-align:center;">예</th><th style="border:1px solid #aaa;padding:4px;background:#dce6f1;width:40px;text-align:center;">아니오</th><th style="border:1px solid #aaa;padding:4px;background:#dce6f1;">조치</th></tr></thead>
-              <tbody>
-                ${addYN.map((r,i)=>`<tr>
-                  <td style="border:1px solid #aaa;padding:4px;">
-                    <div style="font-weight:700;margin-bottom:2px;">${addActs[i][0]}</div>
-                    ${addActs[i][1].map(s=>`<div style="padding-left:10px;margin-top:2px;">• ${s}</div>`).join('')}
-                  </td>
-                  <td style="border:1px solid #aaa;padding:4px;text-align:center;">${roChkBox(r.y)}</td>
-                  <td style="border:1px solid #aaa;padding:4px;text-align:center;">${roChkBox(r.n)}</td>
-                  <td style="border:1px solid #aaa;padding:4px;">${r.txt}</td>
-                </tr>`).join('')}
-              </tbody>
-            </table>
-          </td>
-        </tr>
-      </table>
-
-      <div style="border:1px solid #aaa;padding:6px 10px;margin-top:6px;font-size:11.5px;background:#fafafa;">
-        <div style="font-weight:700;margin-bottom:4px;">전기 계획 확인:</div>
-        <div style="font-size:11px;margin-bottom:6px;">전기 담당 책임자가 전류가 흐르는 전기 장비의 정비 작업에 대한 심도 깊은 검토를 이행하였으며 이는 전원을 차단하고 작업 수행을 할 수 없으며 본 조치 양식 및 관련 위험 평가서에 단계별 작업에 대한 설명 및 특정 조치 요구 사항 등에 관해 기술하고 있음을 확인 하기 위한 것이었음.</div>
-        <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
-          <thead><tr><th style="background:#dce6f1;border:1px solid #aaa;padding:5px;">확인</th><th style="background:#dce6f1;border:1px solid #aaa;padding:5px;">이름</th><th style="background:#dce6f1;border:1px solid #aaa;padding:5px;">서명</th><th style="background:#dce6f1;border:1px solid #aaa;padding:5px;">날짜</th><th style="background:#dce6f1;border:1px solid #aaa;padding:5px;">시각</th></tr></thead>
-          <tbody><tr>
-            <td style="border:1px solid #aaa;padding:5px;">전기 계획 완료:<br><span style="font-size:10px;">(전기 담당 책임자)</span></td>
-            <td style="border:1px solid #aaa;padding:5px;">${confName}</td>
-            <td style="border:1px solid #aaa;padding:5px;min-width:100px;">&nbsp;</td>
-            <td style="border:1px solid #aaa;padding:5px;">${confDate}</td>
-            <td style="border:1px solid #aaa;padding:5px;">${confTime}</td>
-          </tr></tbody>
-        </table>
-      </div>`;
-
-  } else if (fm.type === 'lifting') {
-    // ── 기계적 인양 작업 양식 (3페이지) ── 원본 PDF 완전 재현
-    var licY=ck(), licN=ck(), permY=ck(), permN=ck();
-    var s1w=iv(), s1loc=iv(), s1type=iv(), s1cspec=iv(), s1creg=iv(), s1cap=iv(), s1rad=iv();
-    var s1sdate=iv(), s1stime=iv(), s1edate=iv(), s1etime=iv();
-
-    // Section 2
-    var hazY=ck(),hazN=ck(), isoY=ck(),isoN=ck(), emergY=ck(),emergN=ck();
-    var supName=iv(), supDate=iv();
-    // Section 3
-    var s3name1=iv(), s3date1=iv();
-    var s3name2=iv(), s3date2=iv();
-    // Section 4
-    var s4done=ck(), s4stop=ck(), s4chkY=ck(), s4chkN=ck(), s4eqY=ck(), s4eqN=ck();
-    var s4note=iv(), s4name=iv(), s4date=iv(), s4time=iv();
-
-    // Section 5 체크리스트 (6개 카테고리)
-    var chk5_1 = [
-      '위험성 평가를 수행하였는가?',
-      '화물이 전원이 켜져있는 설비나 전선, 가스 배관위로 인양되고 있는가?',
-      '작업자는 장비에 익숙한가?',
-      '작업자는 작업 수행 경험이 풍부한가?',
-      '작업이 여러 개의 순차적 단계로 되어 있는가?',
-      '인양될 화물이 20톤을 초과하는가?',
-      '크레인 조립, 해체 또는 구조변경 관련 작업인가?',
-      '거의 수직으로 (3도) 들어올리기 위해 천장크레인/모노레일을 사용하고 있는가?',
-      '매설된 전선이나 수도관을 확인하였는가?',
-      '크레인기사에게 알려야 할 사항이 있는가?',
-      '화물 용접 필요 시 화물과 크레인 사이에 절연체를 사용하였는가?',
-      '화물의 권상지점과 인양 방법을 파악하였는가?',
-      '인양 작업 지역의 전선에 대하여 확인하고 격리를 실시하거나 관련 규정에 따라 이격거리를 두었는가?',
-      '화물 인양 크레인의 이동 경로가 제대로 파악되었는가?',
-      '진입경로를 확보하고 장애물이 없는지 확인하였는가?',
-      '크레인 기사의 보행로가 확보되어 있는가?',
-      '상부공간(헤드룸)이 충분한가?',
-      '붐을 작동하기에 충분한 고도가 확보되었는가?',
-      '화물이 잘 묶여 있는지 확인하였는가?',
-      '줄걸이 용구를 안전하게 제거할 수 있는가?',
-      '화물 권하 지점과 줄걸이 용구 분리 지점이 정해져 있는가?',
-      '악천후가 예상되는가?',
-      '작업 가능 최대풍속이 정해져 있는가? 최대풍속 측정이 가능한가?'
-    ];
-    var c51=[]; chk5_1.forEach(()=>{c51.push({y:ck(),n:ck()});});
-
-    var chk5_2=['화물 및 후크 등 줄걸이 용구의 무게에 대하여 작업자가 잘 알고 있는가?','크레인 로드차트(인양능력표)가 있는가? 전체 인양 무게를 알고 있는가? 인양되어야 할 모든 항목들을 파악하고 있는가(붐헤드 포함 또는 미포함)?','화물 형태가 일반적인가, 또는 특이한가?','느슨하게 체결된 줄걸이 용구는 없는가?'];
-    var c52=[]; chk5_2.forEach(()=>{c52.push({y:ck(),n:ck()});});
-
-    var chk5_3=['인양고리를 사용하는가? 적합하게 디자인 된 고리인가? 안전작업하중이 표시되어 있는가?','슬링, 샤클 등의 안전하중 또는 하중제한을 확인하였는가?','슬링의 각도나 매듭 방법은 처리하는 화물의 무게에 알맞게 되어 있는가?','인양장치의 하자나 손상 여부를 확인하였는가?','뾰족한 단면에 의해 슬링이 손상될 위험이 없는가?'];
-    var c53=[]; chk5_3.forEach(()=>{c53.push({y:ck(),n:ck()});});
-
-    var chk5_4=['사용전 사용후 점검을 실시하였는가?','운전석의 에어컨을 포함하여 크레인의 모든 안전장치가 제대로 작동되고 있는가?','지면의 상태 또는 구조가 적합하다고 판단되는가?','매트 위에 아웃트리거를 완전히 설치했는가?','작업 반경 및 크레인 구조에 기초한 로드차트(인양능력표)에 나와있는 크레인 인양 능력 범위 내에서 작업이 이루어지는가?'];
-    var c54=[]; chk5_4.forEach(()=>{c54.push({y:ck(),n:ck()});});
-
-    var chk5_5=['사람과 관련된 인양작업을 한다거나 사람의 머리위로 화물을 인양하는 경우, 위험성평가를 실시하거나 줄걸이 작업 계획서를 작성하였는가?','본 인양작업에 대한 절차서가 있다면, 해당 절차서를 준수하고 있는가?','인양작업 지침 및 규정에 대해 충분한 지도를 하였는가?','인양작업 지역은 가동중인 설비, 배관, 전선 등에서 떨어져 있는가?','인양작업 반경은 줄자 또는 공학도구로 정확하게 측정되었는가?','충분한 상부공간(헤드룸)을 두고 인양작업을 실시하는가?','바리케이트나, 접근금지테이프를 이용해 인양작업 구역을 격리했는가? 또는 감사자','고소 작업을 실시하는 경우, 위험성평가를 실시했는가? 고소작업자는 적합한 개인보호장구를 갖추고 있는가?','인양작업을 수행하기에 안전한가? (예를 들어, 강풍, 태풍과 같은 악천후 상황)','인양된 화물이 크레인의 몸체나 붐, 장애물에 부딪힐 가능성이 있는가? 줄걸이 작업 계획서를 검토하였는가?'];
-    var c55=[]; chk5_5.forEach(()=>{c55.push({y:ck(),n:ck()});});
-
-    var chk5_6=['인양화물이 일반적인 줄걸이 용구로 취급하는 인양화물보다 무겁거나 복잡한 경우, 이 사실을 감독자가 알고 있는가?','인양 작업에 쓰이는 줄걸이 용구는 법적 적합성 검사를 받았는가? 현장 관리자는 그 적합성을 평가 하였는가?','크레인 기사 및 신호수가 본 작업을 수행할 역량이 있는지를 보여주는 자격증을 갖추고 있는가?','인양화물을 통제하는 사람이 누구인지 확인하였는가? 식별이 용이한 조끼(밤에도 잘 보이는)을 착용하였는가?','기타 부대 장비를 갖추고 있는가? (붐리프트, 시저리프트, 포크리프트) 작업자가 충분한 역량을 가지고 있는가?'];
-    var c56=[]; chk5_6.forEach(()=>{c56.push({y:ck(),n:ck()});});
-
-    function chkTbl(title, items, data){
-      return `<div class="ex-sec green" style="margin-top:6px;">${title}</div>
-      <table class="ex-tbl">
-        <thead><tr><th></th><th class="center">예</th><th class="center">아니오</th></tr></thead>
-        <tbody>${items.map((t,i)=>`<tr><td style="font-size:11px;">${t}</td><td class="center">${roChkBox(data[i].y)}</td><td class="center">${roChkBox(data[i].n)}</td></tr>`).join('')}</tbody>
-      </table>`;
-    }
-
-    inner = `
-      <div class="ex-notice">
-        20톤 이상 인양작업 또는 두 개 이상의 크레인 사용시 반드시 허가를 받아야 한다. 작업 전에 반드시 <strong>위험성평가/또는 작업안전분석</strong>을 수행, 위험요인을 찾아내어 조치를 취하여야 한다. 두 개 이상의 크레인을 사용할 경우, 역량을 갖춘 자가 "인양방법"을 검토한 후 본 허가서에 검토결과를 첨부한다.
-      </div>
-      <table class="ex-tbl" style="margin-bottom:8px;">
-        <tr><td style="font-size:11.5px;">인양 작업 수행자는 면허증을 소지하고 있으며 훈련을 받아 필요한 역량을 갖추고 있는가?</td><td style="width:60px;text-align:center;">${roChkBox(licY)} 예</td><td style="width:60px;text-align:center;">${roChkBox(licN)} 아니오</td></tr>
-        <tr><td style="font-size:11.5px;">해당 작업에 대한 허가서를 발급받았는가?</td><td style="text-align:center;">${roChkBox(permY)} 예</td><td style="text-align:center;">${roChkBox(permN)} 아니오</td></tr>
-      </table>
-
-      <div class="ex-permitno"><div class="ex-permitno-box"><div class="ex-permitno-label">작업허가 번호</div><div class="ex-permitno-val"></div></div></div>
-
-      <div class="ex-sec">SECTION 1 – 일반사항</div>
-      <table class="ex-tbl">
-        <tr><th style="width:100px;">작업명</th><td colspan="5">${s1w}</td></tr>
-        <tr><th>작업 장소</th><td colspan="5">${s1loc}</td></tr>
-        <tr><th>작업 목적/유형</th><td colspan="5">${s1type}</td></tr>
-        <tr><th>크레인 규격</th><td>규격: ${s1cspec}</td><th style="width:80px;">크레인 등록 번호</th><td>${s1creg}</td><th style="width:60px;">권상하중</th><td>${s1cap} / 작업 반경: ${s1rad}</td></tr>
-        <tr><th>작업 기간</th><td colspan="5" style="font-size:11px;">시작 일시: ${s1sdate} ${s1stime}&nbsp;&nbsp;&nbsp;종료 일시: ${s1edate} ${s1etime}</td></tr>
-      </table>
-
-      <div class="ex-sec">SECTION 2 – 관리 방안</div>
-      <div style="border:1px solid #aaa;padding:6px 10px;margin-bottom:4px;">
-        ${[['작업장에 위험요소가 없는가?',hazY,hazN],['추가 격리가 필요한가?',isoY,isoN],['비상 대응 방안이 필요한가?',emergY,emergN]].map(q=>`
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #eee;font-size:11.5px;">
-            <span>${q[0]}</span>
-            <span style="display:flex;gap:16px;">
-              <label style="display:flex;gap:3px;align-items:center;">${roChkBox(q[1])} 예</label>
-              <label style="display:flex;gap:3px;align-items:center;">${roChkBox(q[2])} 아니오</label>
-            </span>
-          </div>`).join('')}
-        <div style="margin-top:6px;font-size:11.5px;"><strong>작업업체 관리감독자 위험 수용:</strong><br>
-          본인은 20톤 이상의 인양작업을 허가한다. 본인은 이 작업을 수행하는데 있어 보다 안전한 대체 방법이 없음을 위험성평가 또는 작업안전분석을 통해 입증했다고 인정한다. 인양작업은 위험성평가를 통해서 확인된 작업에 한한다.</div>
-        <div style="display:flex;gap:16px;margin-top:6px;font-size:11.5px;"><strong>이름:</strong> ${supName}&nbsp;&nbsp;<strong>서명:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>날짜:</strong> ${supDate}</div>
-      </div>
-
-      <div class="ex-sec">SECTION 3 – 작업 허가</div>
-      <div style="border:1px solid #aaa;padding:6px 10px;margin-bottom:4px;font-size:11.5px;">
-        <div>본 허가서를 인정하며 상기 명시된 조건 및 관련 절차를 준수할 것에 동의하고, 작업의 직접적인 담당자로서 책임을 수락한다. 아울러, 본인은 첨부된 위험성평가/작업안전분석, 절차서 그리고 구조방안을 숙지하였고 위험요인에 대한 개선 조치가 취해졌음을 확인하였다.</div>
-        <div style="display:flex;gap:16px;margin-top:6px;"><strong>이름:</strong> ${s3name1}&nbsp;&nbsp;<strong>서명:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>날짜:</strong> ${s3date1}</div>
-        <div style="margin-top:8px;">본인은 본 허가서에 나와있는 위험성평가/작업분석상의 작업조건과 주의 사항에 준하여 20톤 이상의 화물 인양 작업을 허가한다.<br><span style="font-size:10.5px;">주의: 본 허가서에 위험성평가/작업안전분석서를 반드시 첨부할 것.</span></div>
-        <div style="display:flex;gap:16px;margin-top:6px;"><strong>이름:</strong> ${s3name2}&nbsp;&nbsp;<strong>서명:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>날짜:</strong> ${s3date2}</div>
-      </div>
-
-      <div class="ex-sec">SECTION 4 – 작업의 완료, 중단 또는 취소 (작업업체 관리감독자)</div>
-      <div style="border:1px solid #aaa;padding:6px 10px;margin-bottom:4px;font-size:11.5px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <span>인양허가와 관련된 모든 작업의 상태:</span>
-          <span>${roChkBox(s4done)} 완료&nbsp;&nbsp;${roChkBox(s4stop)} 중단</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;"><span>작업 완료 후 작업장과 그 인접한 구역을 점검하였으며 모든 위험요소에 대해 조치하였는가?</span><span>${roChkBox(s4chkY)} 예&nbsp;${roChkBox(s4chkN)} 아니오</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;"><span>장비 점검 후 반납하였는가?</span><span>${roChkBox(s4eqY)} 예&nbsp;${roChkBox(s4eqN)} 아니오</span></div>
-        <div>비고: ${s4note}</div>
-        <div style="display:flex;gap:16px;margin-top:6px;"><strong>이름:</strong> ${s4name}&nbsp;&nbsp;<strong>서명:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>날짜:</strong> ${s4date}&nbsp;&nbsp;<strong>시간:</strong> ${s4time}</div>
-      </div>
-
-      ${chkTbl('SECTION 5 – 체크리스트 / 1. 일반', chk5_1, c51)}
-      ${chkTbl('2. 화물', chk5_2, c52)}
-      ${chkTbl('3. 인양장비', chk5_3, c53)}
-      ${chkTbl('4. 크레인', chk5_4, c54)}
-      ${chkTbl('5. 인양', chk5_5, c55)}
-      ${chkTbl('6. 작업자', chk5_6, c56)}`;
+  }else if(fm.type==='lifting'){
+    const mkT=(t,items,prefix)=>`<div style="background:#2e7d32;color:#fff;padding:5px 10px;font-weight:700;font-size:11.5px;margin:8px 0 3px;">${t}</div><table class="ex-tbl"><thead><tr><th></th><th style="width:36px;text-align:center;">예</th><th style="width:44px;text-align:center;">아니오</th></tr></thead><tbody>${items.map((t,i)=>`<tr><td style="font-size:11px;line-height:1.5;">${t}</td><td style="text-align:center;">${roCk(prefix+'_y'+i)}</td><td style="text-align:center;">${roCk(prefix+'_n'+i)}</td></tr>`).join('')}</tbody></table>`;
+    const c1=['위험성 평가를 수행하였는가?','화물이 전원이 켜져있는 설비나 전선, 가스 배관위로 인양되고 있는가?','작업자는 장비에 익숙한가?','작업자는 작업 수행 경험이 풍부한가?','작업이 여러 개의 순차적 단계로 되어 있는가?','인양될 화물이 20톤을 초과하는가?','크레인 조립, 해체 또는 구조변경 관련 작업인가?','거의 수직으로 (3도) 들어올리기 위해 천장크레인/모노레일을 사용하고 있는가?','매설된 전선이나 수도관을 확인하였는가?','크레인기사에게 알려야 할 사항이 있는가?','화물 용접 필요 시 화물과 크레인 사이에 절연체를 사용하였는가?','화물의 권상지점과 인양 방법을 파악하였는가?','인양 작업 지역의 전선에 대하여 확인하고 격리를 실시하거나 관련 규정에 따라 이격거리를 두었는가?','화물 인양 크레인의 이동 경로가 제대로 파악되었는가?','진입경로를 확보하고 장애물이 없는지 확인하였는가?','크레인 기사의 보행로가 확보되어 있는가?','상부공간(헤드룸)이 충분한가?','붐을 작동하기에 충분한 고도가 확보되었는가?','화물이 잘 묶여 있는지 확인하였는가?','줄걸이 용구를 안전하게 제거할 수 있는가?','화물 권하 지점과 줄걸이 용구 분리 지점이 정해져 있는가?','악천후가 예상되는가?','작업 가능 최대풍속이 정해져 있는가? 최대풍속 측정이 가능한가?'];
+    const c2=['화물 및 후크 등 줄걸이 용구의 무게에 대하여 작업자가 잘 알고 있는가?','크레인 로드차트(인양능력표)가 있는가? 전체 인양 무게를 알고 있는가? 인양되어야 할 모든 항목들을 파악하고 있는가(붐헤드 포함 또는 미포함)?','화물 형태가 일반적인가, 또는 특이한가?','느슨하게 체결된 줄걸이 용구는 없는가?'];
+    const c3=['인양고리를 사용하는가? 적합하게 디자인 된 고리인가? 안전작업하중이 표시되어 있는가?','슬링, 샤클 등의 안전하중 또는 하중제한을 확인하였는가?','슬링의 각도나 매듭 방법은 처리하는 화물의 무게에 알맞게 되어 있는가?','인양장치의 하자나 손상 여부를 확인하였는가?','뾰족한 단면에 의해 슬링이 손상될 위험이 없는가?'];
+    const c4=['사용전 사용후 점검을 실시하였는가?','운전석의 에어컨을 포함하여 크레인의 모든 안전장치가 제대로 작동되고 있는가?','지면의 상태 또는 구조가 적합하다고 판단되는가?','매트 위에 아웃트리거를 완전히 설치했는가?','작업 반경 및 크레인 구조에 기초한 로드차트(인양능력표)에 나와있는 크레인 인양 능력 범위 내에서 작업이 이루어지는가?'];
+    const c5=['사람과 관련된 인양작업을 한다거나 사람의 머리위로 화물을 인양하는 경우, 위험성평가를 실시하거나 줄걸이 작업 계획서를 작성하였는가?','본 인양작업에 대한 절차서가 있다면, 해당 절차서를 준수하고 있는가?','인양작업 지침 및 규정에 대해 충분한 지도를 하였는가?','인양작업 지역은 가동중인 설비, 배관, 전선 등에서 떨어져 있는가?','인양작업 반경은 줄자 또는 공학도구로 정확하게 측정되었는가?','충분한 상부공간(헤드룸)을 두고 인양작업을 실시하는가?','바리케이트나, 접근금지테이프를 이용해 인양작업 구역을 격리했는가? 또는 감사자','고소 작업을 실시하는 경우, 위험성평가를 실시했는가? 고소작업자는 적합한 개인보호장구를 갖추고 있는가?','인양작업을 수행하기에 안전한가? (예를 들어, 강풍, 태풍과 같은 악천후 상황)','인양된 화물이 크레인의 몸체나 붐, 장애물에 부딪힐 가능성이 있는가? 줄걸이 작업 계획서를 검토하였는가?'];
+    const c6=['인양화물이 일반적인 줄걸이 용구로 취급하는 인양화물보다 무겁거나 복잡한 경우, 이 사실을 감독자가 알고 있는가?','인양 작업에 쓰이는 줄걸이 용구는 법적 적합성 검사를 받았는가? 현장 관리자는 그 적합성을 평가 하였는가?','크레인 기사 및 신호수가 본 작업을 수행할 역량이 있는지를 보여주는 자격증을 갖추고 있는가?','인양화물을 통제하는 사람이 누구인지 확인하였는가? 식별이 용이한 조끼(밤에도 잘 보이는)을 착용하였는가?','기타 부대 장비를 갖추고 있는가? (붐리프트, 시저리프트, 포크리프트) 작업자가 충분한 역량을 가지고 있는가?'];
+    inner=`<div class="ex-notice">20톤 이상 인양작업 또는 두 개 이상의 크레인 사용시 반드시 허가를 받아야 한다. 작업 전에 반드시 <strong>위험성평가/또는 작업안전분석</strong>을 수행, 위험요인을 찾아내어 조치를 취하여야 한다.</div>`
+     +`<table class="ex-tbl"><tbody><tr><td style="font-size:11.5px;">인양 작업 수행자는 면허증을 소지하고 있으며 훈련을 받아 필요한 역량을 갖추고 있는가?</td><td style="width:70px;text-align:center;">${roCk('lic_y')} 예</td><td style="width:80px;text-align:center;">${roCk('lic_n')} 아니오</td></tr><tr><td style="font-size:11.5px;">해당 작업에 대한 허가서를 발급받았는가?</td><td style="text-align:center;">${roCk('perm_y')} 예</td><td style="text-align:center;">${roCk('perm_n')} 아니오</td></tr></tbody></table>`
+     +secB('SECTION 1 – 일반사항')
+     +`<table class="ex-tbl"><tbody><tr><th style="width:90px;">작업명</th><td colspan="5">${fv('s1_work')}</td></tr><tr><th>작업 장소</th><td colspan="5">${fv('s1_loc')}</td></tr><tr><th>작업 목적/유형</th><td colspan="5">${fv('s1_type')}</td></tr><tr><th>크레인 규격</th><td colspan="5" style="font-size:11.5px;">규격: ${fv('cr_spec')}&nbsp; 등록번호: ${fv('cr_reg')}&nbsp; 권상하중: ${fv('cr_cap')}&nbsp; 작업반경: ${fv('cr_rad')}</td></tr><tr><th>작업 기간</th><td colspan="5" style="font-size:11.5px;">시작: ${fv('s1_sdate')} ${fv('s1_stime')}&emsp;종료: ${fv('s1_edate')} ${fv('s1_etime')}</td></tr></tbody></table>`
+     +secB('SECTION 2 – 관리 방안')
+     +`<div style="border:1px solid #aab;padding:8px 12px;margin-bottom:4px;border-radius:0 0 3px 3px;">${[['작업장에 위험요소가 없는가?','haz'],['추가 격리가 필요한가?','iso'],['비상 대응 방안이 필요한가?','emer']].map(q=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #eee;font-size:11.5px;"><span>${q[0]}</span><span style="display:flex;gap:16px;"><label style="display:flex;gap:3px;align-items:center;">${roCk(q[1]+'_y')} 예</label><label style="display:flex;gap:3px;align-items:center;">${roCk(q[1]+'_n')} 아니오</label></span></div>`).join('')}<div style="margin-top:8px;font-size:11.5px;font-weight:700;">작업업체 관리감독자 위험 수용:</div><div style="font-size:11px;line-height:1.6;margin-top:3px;">본인은 20톤 이상의 인양작업을 허가한다. 본인은 이 작업을 수행하는데 있어 보다 안전한 대체 방법이 없음을 위험성평가 또는 작업안전분석을 통해 입증했다고 인정한다.</div><div style="display:flex;gap:16px;margin-top:6px;font-size:11.5px;"><strong>이름:</strong> ${fv('s2_name')}&ensp;<strong>날짜:</strong> ${fv('s2_date')}</div></div>`
+     +secB('SECTION 3 – 작업 허가')
+     +`<div style="border:1px solid #aab;padding:8px 12px;margin-bottom:4px;font-size:11.5px;border-radius:0 0 3px 3px;"><p style="line-height:1.6;margin-bottom:6px;">본 허가서를 인정하며 상기 명시된 조건 및 관련 절차를 준수할 것에 동의하고, 작업의 직접적인 담당자로서 책임을 수락한다. 아울러, 본인은 첨부된 위험성평가/작업안전분석, 절차서 그리고 구조방안을 숙지하였고 위험요인에 대한 개선 조치가 취해졌음을 확인하였다.</p><div style="display:flex;gap:16px;margin-bottom:8px;"><strong>이름:</strong> ${fv('s3_name1')}&ensp;<strong>날짜:</strong> ${fv('s3_date1')}</div><p style="line-height:1.6;margin-bottom:6px;">본인은 본 허가서에 나와있는 위험성평가/작업분석상의 작업조건과 주의 사항에 준하여 20톤 이상의 화물 인양 작업을 허가한다.<br><strong>주의:</strong> 본 허가서에 위험성평가/작업안전분석서를 반드시 첨부할 것.</p><div style="display:flex;gap:16px;"><strong>이름:</strong> ${fv('s3_name2')}&ensp;<strong>날짜:</strong> ${fv('s3_date2')}</div></div>`
+     +secB('SECTION 4 – 작업의 완료, 중단 또는 취소 (작업업체 관리감독자)')
+     +`<div style="border:1px solid #aab;padding:8px 12px;margin-bottom:6px;font-size:11.5px;border-radius:0 0 3px 3px;"><div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span>인양허가와 관련된 모든 작업의 상태:</span><span>${roCk('s4_done')} 완료&emsp;${roCk('s4_stop')} 중단</span></div><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>작업 완료 후 작업장과 그 인접한 구역을 점검하였으며 모든 위험요소에 대해 조치하였는가?</span><span>${roCk('s4_chk_y')} 예&nbsp;${roCk('s4_chk_n')} 아니오</span></div><div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span>장비 점검 후 반납하였는가?</span><span>${roCk('s4_eq_y')} 예&nbsp;${roCk('s4_eq_n')} 아니오</span></div><div style="margin-bottom:6px;">비고: ${fv('s4_note')}</div><div style="display:flex;gap:16px;"><strong>이름:</strong> ${fv('s4_name')}&ensp;<strong>날짜:</strong> ${fv('s4_date')}&ensp;<strong>시간:</strong> ${fv('s4_time')}</div></div>`
+     +secB('SECTION 5 – 체크리스트')
+     +mkT('1. 일반',c1,'c51')+mkT('2. 화물',c2,'c52')+mkT('3. 인양장비',c3,'c53')+mkT('4. 크레인',c4,'c54')+mkT('5. 인양',c5,'c55')+mkT('6. 작업자',c6,'c56');
   }
-
-  var titles = {hotwork:'화기작업 양식', height:'고소작업 양식', electric:'전기 유지보수 작업 양식(전원이 켜진 장비)', lifting:'기계적 인양 작업 양식'};
-
-  return `<div class="card">
-    <div class="card-header extra">
-      <span>📋 ${titles[fm.type]||fm.type}</span>
-      <span class="badge">외주작업자 작성완료</span>
-    </div>
-    <div class="card-body ex-wrap">
-      <div class="ex-title-bar">
-        <div class="ex-badge">작업허가서</div>
-        <div class="ex-title">${titles[fm.type]||fm.type}</div>
-      </div>
-      ${inner}
-    </div>
-  </div>`;
+  return `<div class="card"><div class="card-hdr extra"><span>📋 ${titles[fm.type]||fm.type}</span><span class="badge done-mark">외주작업자 작성완료</span></div><div class="card-body ex-wrap"><div class="ex-titlebar"><div class="ex-badge">작업허가서</div><div class="ex-title">${titles[fm.type]||fm.type}</div></div>${inner}</div></div>`;
 }
 
-function renderReadOnly(forms, f, p, mgr3) {
-  // 추가 읽기전용 렌더링 (권한 없을 때도 내용 보여주기)
-  // 이미 renderAll에서 처리됨
-}
-
-// ── 서명 패드 ──────────────────────────────────────
-function initPad(cv) {
-  var ctx=cv.getContext('2d'), dr=false, lx=0, ly=0;
-  ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height);
-  ctx.strokeStyle='#111'; ctx.lineWidth=2; ctx.lineCap='round'; ctx.lineJoin='round';
-  function gp(e){var r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;
-    if(e.touches)return{x:(e.touches[0].clientX-r.left)*sx,y:(e.touches[0].clientY-r.top)*sy};
-    return{x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};}
-  cv.addEventListener('mousedown',e=>{dr=true;var p=gp(e);lx=p.x;ly=p.y;});
-  cv.addEventListener('mousemove',e=>{if(!dr)return;var p=gp(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;hideHint(cv);});
-  cv.addEventListener('mouseup',()=>dr=false);
-  cv.addEventListener('mouseleave',()=>dr=false);
-  cv.addEventListener('touchstart',e=>{e.preventDefault();dr=true;var p=gp(e);lx=p.x;ly=p.y;},{passive:false});
-  cv.addEventListener('touchmove',e=>{e.preventDefault();if(!dr)return;var p=gp(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;hideHint(cv);},{passive:false});
+// ── 서명 패드 ──
+function initPad(cv){
+  const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#111';ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';
+  let dr=false,lx=0,ly=0;
+  const gp=e=>{const r=cv.getBoundingClientRect(),sx=cv.width/r.width,sy=cv.height/r.height;if(e.touches)return{x:(e.touches[0].clientX-r.left)*sx,y:(e.touches[0].clientY-r.top)*sy};return{x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};};
+  const hh=()=>{const h=cv.closest('.sigpad')?.querySelector('.sighint');if(h)h.style.display='none';};
+  cv.addEventListener('mousedown',e=>{dr=true;const p=gp(e);lx=p.x;ly=p.y;});
+  cv.addEventListener('mousemove',e=>{if(!dr)return;const p=gp(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;hh();});
+  cv.addEventListener('mouseup',()=>dr=false);cv.addEventListener('mouseleave',()=>dr=false);
+  cv.addEventListener('touchstart',e=>{e.preventDefault();dr=true;const p=gp(e);lx=p.x;ly=p.y;},{passive:false});
+  cv.addEventListener('touchmove',e=>{e.preventDefault();if(!dr)return;const p=gp(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;hh();},{passive:false});
   cv.addEventListener('touchend',()=>dr=false);
 }
-function hideHint(cv){var h=cv.closest('.sigpad').querySelector('.sighint');if(h)h.style.display='none';}
-function clrSig(e,id){e.stopPropagation();var cv=document.getElementById(id);if(!cv)return;var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);var h=cv.closest('.sigpad').querySelector('.sighint');if(h)h.style.display='flex';}
-
-// 확대 서명 모달
-var bigTargetId = null;
-function openSig(padEl) {
-  var cv = padEl.querySelector('canvas');
-  if (!cv || padEl.classList.contains('ro')) return;
-  bigTargetId = cv.id;
-  var modal = document.getElementById('sigModal');
-  modal.classList.add('show');
-  var bigCv = document.getElementById('bigCanvas');
-  bigCtx = bigCv.getContext('2d');
-  bigCtx.fillStyle='#fff'; bigCtx.fillRect(0,0,bigCv.width,bigCv.height);
-  bigCtx.strokeStyle='#111'; bigCtx.lineWidth=3; bigCtx.lineCap='round'; bigCtx.lineJoin='round';
-  bigDrawing=false;
-  bigCv.onmousedown = e=>{bigDrawing=true;var r=bigCv.getBoundingClientRect();bigLx=e.clientX-r.left;bigLy=e.clientY-r.top;};
-  bigCv.onmousemove = e=>{if(!bigDrawing)return;var r=bigCv.getBoundingClientRect();var x=e.clientX-r.left,y=e.clientY-r.top;bigCtx.beginPath();bigCtx.moveTo(bigLx,bigLy);bigCtx.lineTo(x,y);bigCtx.stroke();bigLx=x;bigLy=y;};
-  bigCv.onmouseup = ()=>bigDrawing=false;
-  bigCv.ontouchstart = e=>{e.preventDefault();bigDrawing=true;var r=bigCv.getBoundingClientRect();bigLx=e.touches[0].clientX-r.left;bigLy=e.touches[0].clientY-r.top;};
-  bigCv.ontouchmove = e=>{e.preventDefault();if(!bigDrawing)return;var r=bigCv.getBoundingClientRect();var x=e.touches[0].clientX-r.left,y=e.touches[0].clientY-r.top;bigCtx.beginPath();bigCtx.moveTo(bigLx,bigLy);bigCtx.lineTo(x,y);bigCtx.stroke();bigLx=x;bigLy=y;};
-  bigCv.ontouchend = ()=>bigDrawing=false;
+function clrSig(e,id){e.stopPropagation();const cv=document.getElementById(id);if(!cv)return;const ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);const h=cv.closest('.sigpad')?.querySelector('.sighint');if(h)h.style.display='flex';}
+function openSig(padEl){
+  const cv=padEl.querySelector('canvas');if(!cv||padEl.classList.contains('ro'))return;
+  bigTargetId=cv.id;document.getElementById('sigModal').classList.add('show');
+  const bc=document.getElementById('bigCanvas');bigCtx=bc.getContext('2d');
+  bigCtx.fillStyle='#fff';bigCtx.fillRect(0,0,bc.width,bc.height);
+  bigCtx.strokeStyle='#111';bigCtx.lineWidth=3;bigCtx.lineCap='round';bigCtx.lineJoin='round';
+  bigDrawing=false;document.getElementById('bigHint').style.display='flex';
+  const gp=e=>{const r=bc.getBoundingClientRect();if(e.touches)return{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top};return{x:e.clientX-r.left,y:e.clientY-r.top};};
+  bc.onmousedown=e=>{bigDrawing=true;const p=gp(e);bigLx=p.x;bigLy=p.y;document.getElementById('bigHint').style.display='none';};
+  bc.onmousemove=e=>{if(!bigDrawing)return;const p=gp(e);bigCtx.beginPath();bigCtx.moveTo(bigLx,bigLy);bigCtx.lineTo(p.x,p.y);bigCtx.stroke();bigLx=p.x;bigLy=p.y;};
+  bc.onmouseup=()=>bigDrawing=false;
+  bc.ontouchstart=e=>{e.preventDefault();bigDrawing=true;const p=gp(e);bigLx=p.x;bigLy=p.y;document.getElementById('bigHint').style.display='none';};
+  bc.ontouchmove=e=>{e.preventDefault();if(!bigDrawing)return;const p=gp(e);bigCtx.beginPath();bigCtx.moveTo(bigLx,bigLy);bigCtx.lineTo(p.x,p.y);bigCtx.stroke();bigLx=p.x;bigLy=p.y;};
+  bc.ontouchend=()=>bigDrawing=false;
 }
-function clearBigSig(){var cv=document.getElementById('bigCanvas');bigCtx.fillStyle='#fff';bigCtx.fillRect(0,0,cv.width,cv.height);}
-function saveBigSig(){
-  if(!bigTargetId)return;
-  var bigCv=document.getElementById('bigCanvas');
-  var tgtCv=document.getElementById(bigTargetId);
-  if(tgtCv){tgtCv.getContext('2d').drawImage(bigCv,0,0,tgtCv.width,tgtCv.height);}
-  var h=tgtCv.closest('.sigpad').querySelector('.sighint');if(h)h.style.display='none';
-  document.getElementById('sigModal').classList.remove('show');
-}
+function clearBigSig(){const c=document.getElementById('bigCanvas');bigCtx.fillStyle='#fff';bigCtx.fillRect(0,0,c.width,c.height);document.getElementById('bigHint').style.display='flex';}
+function saveBigSig(){if(!bigTargetId)return;const bc=document.getElementById('bigCanvas'),tc=document.getElementById(bigTargetId);if(tc)tc.getContext('2d').drawImage(bc,0,0,tc.width,tc.height);const h=tc?.closest('.sigpad')?.querySelector('.sighint');if(h)h.style.display='none';document.getElementById('sigModal').classList.remove('show');}
+function getSigData(id){const cv=document.getElementById(id);if(!cv)return null;const d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;for(let i=0;i<d.length;i+=4){if(d[i]<200||d[i+1]<200||d[i+2]<200)return cv.toDataURL('image/jpeg',.88);}return null;}
 
-function getSigData(id){
-  var cv=document.getElementById(id);if(!cv)return null;
-  var d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;
-  for(var i=0;i<d.length;i+=4){if(d[i]<200||d[i+1]<200||d[i+2]<200)return cv.toDataURL('image/jpeg',0.85);}
-  return null;
-}
-
-// ── 서명 제출 ──────────────────────────────────────
-async function doSign() {
-  document.getElementById('btnSubmit').disabled = true;
-  ld(true, '서명 저장 중...');
-
-  try {
-    var payload = { token: TOKEN, step: ROLE };
-
-    if (ROLE === 's3') {
-      var checks = [];
-      [0,1,2].forEach(i=>{ if(document.getElementById('c3-'+i)?.checked) checks.push(i); });
-      var sig = getSigData('sig-s3');
-      if (!sig) { ld(false); alert('Section 3 서명을 해주세요.'); document.getElementById('btnSubmit').disabled=false; return; }
-      payload.data = { name:gv('s3n'), sig, date:gv('s3d'), time:gv('s3t'), checks };
-
-      // 테스트: s3 서명 후 PDF 즉시 생성
-      ld(true, 'PDF 생성 중...');
-      try { await generatePDF(); } catch(e) { console.warn('PDF 실패:', e); }
-
-    } else if (ROLE === 's4') {
-      var checks4 = [];
-      [0,1].forEach(i=>{ if(document.getElementById('c4-'+i)?.checked) checks4.push(i); });
-      var sig4 = getSigData('sig-s4');
-      if (!sig4) { ld(false); alert('Section 4 서명을 해주세요.'); document.getElementById('btnSubmit').disabled=false; return; }
-      payload.data = { name:gv('s4n'), sig:sig4, date:gv('s4d'), time:gv('s4t'), checks:checks4, limitDate:gv('s4ld'), limitTime:gv('s4lt') };
-
-    } else if (ROLE === 'active') {
-      payload.step = 's5to10';
-      payload.data = {
-        s6a:gv('s6a'), s6b:gv('s6b'), s6c:gv('s6c'), s6d:gv('s6d'), s6e:gv('s6e'),
-        s7f:gv('s7f'), s7t:gv('s7t'),
-        s8n:gv('s8n'), s8sig:getSigData('sig-s8'), s8d:gv('s8d'), s8t:gv('s8t'),
-        s9n:gv('s9n'), s9sig:getSigData('sig-s9'), s9d:gv('s9d'), s9t:gv('s9t'),
-        s10n:gv('s10n'), s10sig:getSigData('sig-s10'), s10d:gv('s10d'), s10t:gv('s10t')
-      };
+// ── 서명 제출 ──
+async function doSign(){
+  document.getElementById('btnSubmit').disabled=true;ld(true,'서명 저장 중...');
+  try{
+    const payload={token:TOKEN,step:ROLE};
+    if(ROLE==='s3'){
+      const sig=getSigData('sig-s3');
+      if(!sig){ld(false);alert('Section 3 서명을 완료해주세요.');document.getElementById('btnSubmit').disabled=false;return;}
+      const checks=[0,1,2].filter(i=>document.getElementById('c3-'+i)?.checked);
+      payload.data={name:gv('s3n'),sig,date:gv('s3d'),time:gv('s3t'),checks};
+      ld(true,'PDF 생성 중...');try{await generatePDF();}catch(e){console.warn('PDF:',e);}
+    }else if(ROLE==='s4'){
+      const sig=getSigData('sig-s4');
+      if(!sig){ld(false);alert('Section 4 서명을 완료해주세요.');document.getElementById('btnSubmit').disabled=false;return;}
+      const checks=[0,1].filter(i=>document.getElementById('c4-'+i)?.checked);
+      payload.data={name:gv('s4n'),sig,date:gv('s4d'),time:gv('s4t'),checks,limitDate:gv('s4ld'),limitTime:gv('s4lt')};
+    }else if(ROLE==='active'){
+      payload.step='s5to10';
+      payload.data={s6a:gv('s6a'),s6b:gv('s6b'),s6c:gv('s6c'),s6d:gv('s6d'),s6e:gv('s6e'),s7f:gv('s7f'),s7t:gv('s7t'),s8n:gv('s8n'),s8sig:getSigData('sig-s8'),s8d:gv('s8d'),s8t:gv('s8t'),s9n:gv('s9n'),s9sig:getSigData('sig-s9'),s9d:gv('s9d'),s9t:gv('s9t'),s10n:gv('s10n'),s10sig:getSigData('sig-s10'),s10d:gv('s10d'),s10t:gv('s10t')};
+      ld(true,'PDF 생성 중...');try{await generatePDF();}catch(e){console.warn('PDF:',e);}
     }
-
-    // active일 때: DB 저장 전에 PDF 먼저 생성 (화면이 보이는 상태에서)
-    if (ROLE === 'active') {
-      ld(true, 'PDF 생성 중...');
-      try { await generatePDF(); } catch(pdfErr) { console.warn('PDF 실패:', pdfErr); }
-    }
-
-    var res = await fetch('/api/sign-permit', {
-      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
-    });
-    var data = await res.json();
-    ld(false);
-
-    if (!res.ok) { alert('오류: '+(data.error||'저장 실패')); document.getElementById('btnSubmit').disabled=false; return; }
-
-    // 완료 화면
-    document.getElementById('submitArea').style.display = 'none';
-    document.getElementById('formWrap').style.display = 'none';
-    document.getElementById('stepBar').style.display = 'none';
+    const res=await fetch('/api/sign-permit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();ld(false);
+    if(!res.ok){alert('오류: '+(data.error||'저장 실패'));document.getElementById('btnSubmit').disabled=false;return;}
+    document.getElementById('submitBar').style.display='none';
+    document.getElementById('formWrap').style.display='none';
+    document.getElementById('stepBar')?.closest('.stepwrap')?.remove();
     document.getElementById('doneScreen').classList.add('show');
-
-    if (ROLE === 's3') {
-      document.getElementById('doneTitle').textContent = 'Section 3 서명 완료!';
-      document.getElementById('doneSub').textContent = '승인 담당자에게 이메일이 발송되었습니다. 이 창을 닫아도 됩니다.';
-    } else if (ROLE === 's4') {
-      document.getElementById('doneTitle').textContent = 'Section 4 승인 완료!';
-      document.getElementById('doneSub').textContent = '담당자에게 완료 이메일이 발송되었습니다.';
-    } else {
-      document.getElementById('doneTitle').textContent = '저장 및 PDF 완료!';
-      document.getElementById('doneSub').textContent = 'PDF가 다운로드되었습니다.';
-    }
-
-  } catch(e) {
-    ld(false);
-    alert('오류: '+e.message);
-    document.getElementById('btnSubmit').disabled = false;
-  }
+    const msgs={s3:{icon:'✅',title:'Section 3 서명 완료!',sub:'승인 담당자(이병문)에게 이메일이 발송되었습니다.\n이 창을 닫아도 됩니다.'},s4:{icon:'🏆',title:'Section 4 승인 완료!',sub:'담당자에게 완료 이메일이 발송되었습니다.\n이 창을 닫아도 됩니다.'},active:{icon:'📄',title:'저장 완료!',sub:'PDF가 자동으로 다운로드되었습니다.\n이 창을 닫아도 됩니다.'}};
+    const m=msgs[ROLE]||msgs.active;
+    document.getElementById('doneIcon').textContent=m.icon;document.getElementById('doneTitle').textContent=m.title;document.getElementById('doneSub').textContent=m.sub;
+  }catch(e){ld(false);alert('오류: '+e.message);document.getElementById('btnSubmit').disabled=false;}
 }
 
-async function generatePDF() {
-  var jsPDF = window.jspdf.jsPDF;
-  var pdf = new jsPDF({orientation:'p', unit:'mm', format:'a4'});
-  var cards = Array.from(document.querySelectorAll('#formWrap .card'));
-  if (!cards.length) throw new Error('서류 없음');
-
-  var now2 = new Date();
-  var p2b = n=>String(n).padStart(2,'0');
-  var fileName = '안전서류_'+now2.getFullYear()+p2b(now2.getMonth()+1)+p2b(now2.getDate())+'_'+p2b(now2.getHours())+p2b(now2.getMinutes())+'.pdf';
-
-  var A4W = 210, A4H = 297, margin = 5;
-  var printW = A4W - margin*2;  // 200mm
-  var pxPerMm = 3.78; // 96dpi → mm
-  var captureWidth = Math.round(printW * pxPerMm * 2); // 고해상도
-
-  for (var i=0; i<cards.length; i++) {
-    var card = cards[i];
-    var origStyle = card.getAttribute('style')||'';
-
-    // 캡처용 스타일
-    card.style.cssText = `width:${captureWidth/2}px!important;max-width:${captureWidth/2}px!important;
-      border-radius:0!important;margin:0!important;box-shadow:none!important;
-      background:white!important;overflow:visible!important;`;
-
+// ── PDF 생성 ──
+async function generatePDF(){
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  const cards=Array.from(document.querySelectorAll('#formWrap .card'));
+  if(!cards.length)throw new Error('서류 없음');
+  const d=new Date(),pad=n=>String(n).padStart(2,'0');
+  const fn=`안전서류_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.pdf`;
+  const MARGIN=6,PRINTW=210-MARGIN*2,CAPW=760;
+  for(let i=0;i<cards.length;i++){
+    const card=cards[i],orig=card.getAttribute('style')||'';
+    card.style.cssText=`width:${CAPW}px!important;max-width:${CAPW}px!important;border-radius:0!important;margin:0!important;box-shadow:none!important;background:white!important;overflow:visible!important;`;
     await new Promise(r=>setTimeout(r,80));
-
-    var canvas = await html2canvas(card, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-      width: captureWidth/2,
-      windowWidth: captureWidth/2,
-      onclone: function(doc) {
-        // input → span
-        doc.querySelectorAll('input[type="text"],input[type="date"],input[type="time"]').forEach(function(inp){
-          var s=doc.createElement('span');
-          s.textContent=inp.value||'';
-          s.style.cssText='font-size:11.5px;display:inline-block;width:100%;word-break:break-all;font-family:inherit;';
-          inp.parentNode.replaceChild(s,inp);
-        });
-        doc.querySelectorAll('textarea').forEach(function(ta){
-          var s=doc.createElement('span');
-          s.textContent=ta.value||'';
-          s.style.cssText='font-size:11.5px;display:block;width:100%;white-space:pre-wrap;font-family:inherit;';
-          ta.parentNode.replaceChild(s,ta);
-        });
-        doc.querySelectorAll('input[type="checkbox"]').forEach(function(cb){
-          var s=doc.createElement('span');
-          s.textContent=cb.checked?'☑':'☐';
-          s.style.cssText='font-size:13px;line-height:1;';
-          cb.parentNode.replaceChild(s,cb);
-        });
-        doc.querySelectorAll('*').forEach(function(el){
-          el.style.overflow='visible';
-        });
-        // UI 요소 제거
-        doc.querySelectorAll('.sig-clear,.sighint,.btn-submit,.submit-area,.header,.step-bar,.info-bar,.card-header .badge.editable').forEach(function(el){el.style.display='none';});
+    const canvas=await html2canvas(card,{scale:2.2,useCORS:true,allowTaint:true,logging:false,backgroundColor:'#ffffff',width:CAPW,windowWidth:CAPW,
+      onclone(doc){
+        doc.querySelectorAll('input[type=text],input[type=date],input[type=time]').forEach(inp=>{const s=doc.createElement('span');s.textContent=inp.value||'';s.style.cssText='font-size:11.5px;display:inline-block;width:100%;word-break:break-all;font-family:inherit;';inp.parentNode.replaceChild(s,inp);});
+        doc.querySelectorAll('textarea').forEach(ta=>{const s=doc.createElement('span');s.textContent=ta.value||'';s.style.cssText='font-size:11.5px;display:block;width:100%;white-space:pre-wrap;font-family:inherit;';ta.parentNode.replaceChild(s,ta);});
+        doc.querySelectorAll('input[type=checkbox]').forEach(cb=>{const s=doc.createElement('span');s.textContent=cb.checked?'☑':'☐';s.style.cssText='font-size:13px;line-height:1;vertical-align:middle;';cb.parentNode.replaceChild(s,cb);});
+        doc.querySelectorAll('*').forEach(el=>{el.style.overflow='visible';});
+        doc.querySelectorAll('.sig-clear,.sighint,.submit-bar,.hdr,.stepwrap,.badge.edit').forEach(el=>{el.style.display='none';});
       }
     });
-
-    card.setAttribute('style', origStyle);
-
-    var imgData = canvas.toDataURL('image/jpeg', 0.95);
-    var imgH_mm = (canvas.height / canvas.width) * printW;
-
-    if (i > 0) pdf.addPage();
-
-    // 페이지 높이 초과 시 분할
-    if (imgH_mm <= A4H - margin*2) {
-      pdf.addImage(imgData, 'JPEG', margin, margin, printW, imgH_mm);
-    } else {
-      // 긴 카드는 여러 페이지로 분할
-      var sliceH = Math.floor((A4H - margin*2) / imgH_mm * canvas.height);
-      var offset = 0;
-      var pageIdx = 0;
-      while (offset < canvas.height) {
-        var tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = Math.min(sliceH, canvas.height - offset);
-        var ctx = tempCanvas.getContext('2d');
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-        ctx.drawImage(canvas, 0, offset, canvas.width, tempCanvas.height, 0, 0, canvas.width, tempCanvas.height);
-        var sliceData = tempCanvas.toDataURL('image/jpeg', 0.95);
-        var sliceH_mm = (tempCanvas.height / canvas.width) * printW;
-        if (pageIdx > 0 || i > 0) pdf.addPage();
-        pdf.addImage(sliceData, 'JPEG', margin, margin, printW, sliceH_mm);
-        offset += sliceH;
-        pageIdx++;
+    card.setAttribute('style',orig);
+    const imgData=canvas.toDataURL('image/jpeg',.96),imgH=(canvas.height/canvas.width)*PRINTW;
+    if(i>0)pdf.addPage();
+    if(imgH<=297-MARGIN*2){pdf.addImage(imgData,'JPEG',MARGIN,MARGIN,PRINTW,imgH);}
+    else{
+      const pageH=297-MARGIN*2,slicePx=Math.floor(pageH/imgH*canvas.height);
+      let offset=0,pn=0;
+      while(offset<canvas.height){
+        const h=Math.min(slicePx,canvas.height-offset);
+        const tc=document.createElement('canvas');tc.width=canvas.width;tc.height=h;
+        const tx=tc.getContext('2d');tx.fillStyle='#fff';tx.fillRect(0,0,tc.width,h);tx.drawImage(canvas,0,offset,canvas.width,h,0,0,canvas.width,h);
+        if(pn>0||i>0)pdf.addPage();
+        pdf.addImage(tc.toDataURL('image/jpeg',.96),'JPEG',MARGIN,MARGIN,PRINTW,(h/canvas.width)*PRINTW);
+        offset+=slicePx;pn++;
       }
     }
   }
-
-  pdf.save(fileName);
+  pdf.save(fn);
 }
+async function dlPDF(){document.getElementById('btnPdfDl').disabled=true;ld(true,'PDF 생성 중...');try{await generatePDF();}catch(e){alert('PDF 생성 실패: '+e.message);}finally{ld(false);document.getElementById('btnPdfDl').disabled=false;}}
 
-// 시작
 init();
 </script>
 </body>
