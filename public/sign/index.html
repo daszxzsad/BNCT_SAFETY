@@ -544,45 +544,111 @@ async function doSign(){
   }catch(e){ld(false);alert('오류: '+e.message);document.getElementById('btnSubmit').disabled=false;}
 }
 
-// ── PDF 생성 ──
+// ── PDF 생성 ── (전체 formWrap 한 번 캡처 → A4 슬라이싱)
 async function generatePDF(){
   const{jsPDF}=window.jspdf;
-  const pdf=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
-  const cards=Array.from(document.querySelectorAll('#formWrap .card'));
-  if(!cards.length)throw new Error('서류 없음');
+  const fw=document.getElementById('formWrap');
+  if(!fw||!fw.querySelector('.card'))throw new Error('서류 없음');
+
   const d=new Date(),pad=n=>String(n).padStart(2,'0');
   const fn=`안전서류_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.pdf`;
-  const MARGIN=6,PRINTW=210-MARGIN*2,CAPW=760;
-  for(let i=0;i<cards.length;i++){
-    const card=cards[i],orig=card.getAttribute('style')||'';
-    card.style.cssText=`width:${CAPW}px!important;max-width:${CAPW}px!important;border-radius:0!important;margin:0!important;box-shadow:none!important;background:white!important;overflow:visible!important;`;
-    await new Promise(r=>setTimeout(r,80));
-    const canvas=await html2canvas(card,{scale:2.2,useCORS:true,allowTaint:true,logging:false,backgroundColor:'#ffffff',width:CAPW,windowWidth:CAPW,
-      onclone(doc){
-        doc.querySelectorAll('input[type=text],input[type=date],input[type=time]').forEach(inp=>{const s=doc.createElement('span');s.textContent=inp.value||'';s.style.cssText='font-size:11.5px;display:inline-block;width:100%;word-break:break-all;font-family:inherit;';inp.parentNode.replaceChild(s,inp);});
-        doc.querySelectorAll('textarea').forEach(ta=>{const s=doc.createElement('span');s.textContent=ta.value||'';s.style.cssText='font-size:11.5px;display:block;width:100%;white-space:pre-wrap;font-family:inherit;';ta.parentNode.replaceChild(s,ta);});
-        doc.querySelectorAll('input[type=checkbox]').forEach(cb=>{const s=doc.createElement('span');s.textContent=cb.checked?'☑':'☐';s.style.cssText='font-size:13px;line-height:1;vertical-align:middle;';cb.parentNode.replaceChild(s,cb);});
-        doc.querySelectorAll('*').forEach(el=>{el.style.overflow='visible';});
-        doc.querySelectorAll('.sig-clear,.sighint,.submit-bar,.hdr,.stepwrap,.badge.edit').forEach(el=>{el.style.display='none';});
-      }
-    });
-    card.setAttribute('style',orig);
-    const imgData=canvas.toDataURL('image/jpeg',.96),imgH=(canvas.height/canvas.width)*PRINTW;
-    if(i>0)pdf.addPage();
-    if(imgH<=297-MARGIN*2){pdf.addImage(imgData,'JPEG',MARGIN,MARGIN,PRINTW,imgH);}
-    else{
-      const pageH=297-MARGIN*2,slicePx=Math.floor(pageH/imgH*canvas.height);
-      let offset=0,pn=0;
-      while(offset<canvas.height){
-        const h=Math.min(slicePx,canvas.height-offset);
-        const tc=document.createElement('canvas');tc.width=canvas.width;tc.height=h;
-        const tx=tc.getContext('2d');tx.fillStyle='#fff';tx.fillRect(0,0,tc.width,h);tx.drawImage(canvas,0,offset,canvas.width,h,0,0,canvas.width,h);
-        if(pn>0||i>0)pdf.addPage();
-        pdf.addImage(tc.toDataURL('image/jpeg',.96),'JPEG',MARGIN,MARGIN,PRINTW,(h/canvas.width)*PRINTW);
-        offset+=slicePx;pn++;
-      }
+
+  // PDF 사이즈 설정
+  const MARGIN=8;       // mm
+  const A4W=210, A4H=297;
+  const PRINTW=A4W-MARGIN*2;   // 194mm
+  const PRINTH=A4H-MARGIN*2;   // 281mm
+
+  // 캡처 폭 (794px = A4 96dpi)
+  const CAPW=794;
+  const SCALE=2.5; // 고해상도
+
+  // formWrap 임시 스타일
+  const origStyle=fw.getAttribute('style')||'';
+  fw.style.cssText=`width:${CAPW}px!important;max-width:${CAPW}px!important;background:white!important;padding:0!important;`;
+
+  // 카드 임시 스타일 (마진/라운드 제거)
+  const cards=Array.from(fw.querySelectorAll('.card'));
+  const cardOrig=cards.map(c=>c.getAttribute('style')||'');
+  cards.forEach(c=>{
+    c.style.cssText='border-radius:0!important;margin-bottom:8px!important;box-shadow:none!important;overflow:visible!important;';
+  });
+
+  await new Promise(r=>setTimeout(r,120));
+
+  const canvas=await html2canvas(fw,{
+    scale:SCALE,
+    useCORS:true,
+    allowTaint:true,
+    logging:false,
+    backgroundColor:'#ffffff',
+    width:CAPW,
+    windowWidth:CAPW,
+    onclone(doc){
+      // input/textarea → span (값 표시)
+      doc.querySelectorAll('input[type=text],input[type=date],input[type=time]').forEach(inp=>{
+        const s=doc.createElement('span');
+        s.textContent=inp.value||'';
+        s.style.cssText='font-size:12px;display:inline-block;width:100%;word-break:break-all;font-family:inherit;line-height:1.4;';
+        inp.parentNode.replaceChild(s,inp);
+      });
+      doc.querySelectorAll('textarea').forEach(ta=>{
+        const s=doc.createElement('span');
+        s.textContent=ta.value||'';
+        s.style.cssText='font-size:12px;display:block;width:100%;white-space:pre-wrap;font-family:inherit;';
+        ta.parentNode.replaceChild(s,ta);
+      });
+      doc.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+        const s=doc.createElement('span');
+        s.textContent=cb.checked?'☑':'☐';
+        s.style.cssText='font-size:14px;line-height:1;vertical-align:middle;display:inline-block;';
+        cb.parentNode.replaceChild(s,cb);
+      });
+      // overflow 해제
+      doc.querySelectorAll('*').forEach(el=>el.style.overflow='visible');
+      // UI 요소 숨기기
+      doc.querySelectorAll('.sig-clear,.sighint,.submit-bar,.hdr,.stepwrap,.badge.edit,.btn-pdf-dl,.btn-submit').forEach(el=>{el.style.display='none';});
+      // 카드 마진/라운드 제거
+      doc.querySelectorAll('.card').forEach(c=>{
+        c.style.borderRadius='0';c.style.boxShadow='none';c.style.marginBottom='8px';c.style.overflow='visible';
+      });
+      // sigrow overflow
+      doc.querySelectorAll('.sigrow').forEach(el=>{el.style.overflow='visible';el.style.paddingBottom='16px';});
     }
+  });
+
+  // 원래 스타일 복원
+  fw.setAttribute('style',origStyle);
+  cards.forEach((c,i)=>c.setAttribute('style',cardOrig[i]));
+
+  // 캔버스 → PDF 슬라이싱
+  // 1mm당 픽셀 비율
+  const pxPerMm=canvas.width/PRINTW;
+  const pageHpx=Math.floor(PRINTH*pxPerMm); // 한 페이지 픽셀 높이
+
+  const pdf=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  let offset=0,pageIdx=0;
+
+  while(offset<canvas.height){
+    const sliceH=Math.min(pageHpx, canvas.height-offset);
+    const tc=document.createElement('canvas');
+    tc.width=canvas.width;
+    tc.height=sliceH;
+    const tx=tc.getContext('2d');
+    tx.fillStyle='#fff';
+    tx.fillRect(0,0,tc.width,sliceH);
+    tx.drawImage(canvas,0,offset,canvas.width,sliceH,0,0,canvas.width,sliceH);
+
+    const imgData=tc.toDataURL('image/jpeg',0.96);
+    const sliceHmm=(sliceH/canvas.width)*PRINTW;
+
+    if(pageIdx>0)pdf.addPage();
+    pdf.addImage(imgData,'JPEG',MARGIN,MARGIN,PRINTW,sliceHmm);
+
+    offset+=sliceH;
+    pageIdx++;
   }
+
   pdf.save(fn);
 }
 async function dlPDF(){document.getElementById('btnPdfDl').disabled=true;ld(true,'PDF 생성 중...');try{await generatePDF();}catch(e){alert('PDF 생성 실패: '+e.message);}finally{ld(false);document.getElementById('btnPdfDl').disabled=false;}}
