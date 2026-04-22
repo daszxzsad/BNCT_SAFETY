@@ -544,109 +544,136 @@ async function doSign(){
   }catch(e){ld(false);alert('오류: '+e.message);document.getElementById('btnSubmit').disabled=false;}
 }
 
-// ── PDF 생성 ── (전체 formWrap 한 번 캡처 → A4 슬라이싱)
+// ── PDF 생성 ── 카드 단위로 캡처, 각 카드를 A4 1페이지에 fit
 async function generatePDF(){
   const{jsPDF}=window.jspdf;
-  const fw=document.getElementById('formWrap');
-  if(!fw||!fw.querySelector('.card'))throw new Error('서류 없음');
+  const cards=Array.from(document.querySelectorAll('#formWrap .card'));
+  if(!cards.length)throw new Error('서류 없음');
 
   const d=new Date(),pad=n=>String(n).padStart(2,'0');
   const fn=`안전서류_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.pdf`;
 
-  // PDF 사이즈 설정
-  const MARGIN=8;       // mm
+  const MARGIN=8; // mm
   const A4W=210, A4H=297;
-  const PRINTW=A4W-MARGIN*2;   // 194mm
-  const PRINTH=A4H-MARGIN*2;   // 281mm
-
-  // 캡처 폭 (794px = A4 96dpi)
-  const CAPW=794;
-  const SCALE=2.5; // 고해상도
-
-  // formWrap 임시 스타일
-  const origStyle=fw.getAttribute('style')||'';
-  fw.style.cssText=`width:${CAPW}px!important;max-width:${CAPW}px!important;background:white!important;padding:0!important;`;
-
-  // 카드 임시 스타일 (마진/라운드 제거)
-  const cards=Array.from(fw.querySelectorAll('.card'));
-  const cardOrig=cards.map(c=>c.getAttribute('style')||'');
-  cards.forEach(c=>{
-    c.style.cssText='border-radius:0!important;margin-bottom:8px!important;box-shadow:none!important;overflow:visible!important;';
-  });
-
-  await new Promise(r=>setTimeout(r,120));
-
-  const canvas=await html2canvas(fw,{
-    scale:SCALE,
-    useCORS:true,
-    allowTaint:true,
-    logging:false,
-    backgroundColor:'#ffffff',
-    width:CAPW,
-    windowWidth:CAPW,
-    onclone(doc){
-      // input/textarea → span (값 표시)
-      doc.querySelectorAll('input[type=text],input[type=date],input[type=time]').forEach(inp=>{
-        const s=doc.createElement('span');
-        s.textContent=inp.value||'';
-        s.style.cssText='font-size:12px;display:inline-block;width:100%;word-break:break-all;font-family:inherit;line-height:1.4;';
-        inp.parentNode.replaceChild(s,inp);
-      });
-      doc.querySelectorAll('textarea').forEach(ta=>{
-        const s=doc.createElement('span');
-        s.textContent=ta.value||'';
-        s.style.cssText='font-size:12px;display:block;width:100%;white-space:pre-wrap;font-family:inherit;';
-        ta.parentNode.replaceChild(s,ta);
-      });
-      doc.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-        const s=doc.createElement('span');
-        s.textContent=cb.checked?'☑':'☐';
-        s.style.cssText='font-size:14px;line-height:1;vertical-align:middle;display:inline-block;';
-        cb.parentNode.replaceChild(s,cb);
-      });
-      // overflow 해제
-      doc.querySelectorAll('*').forEach(el=>el.style.overflow='visible');
-      // UI 요소 숨기기
-      doc.querySelectorAll('.sig-clear,.sighint,.submit-bar,.hdr,.stepwrap,.badge.edit,.btn-pdf-dl,.btn-submit').forEach(el=>{el.style.display='none';});
-      // 카드 마진/라운드 제거
-      doc.querySelectorAll('.card').forEach(c=>{
-        c.style.borderRadius='0';c.style.boxShadow='none';c.style.marginBottom='8px';c.style.overflow='visible';
-      });
-      // sigrow overflow
-      doc.querySelectorAll('.sigrow').forEach(el=>{el.style.overflow='visible';el.style.paddingBottom='16px';});
-    }
-  });
-
-  // 원래 스타일 복원
-  fw.setAttribute('style',origStyle);
-  cards.forEach((c,i)=>c.setAttribute('style',cardOrig[i]));
-
-  // 캔버스 → PDF 슬라이싱
-  // 1mm당 픽셀 비율
-  const pxPerMm=canvas.width/PRINTW;
-  const pageHpx=Math.floor(PRINTH*pxPerMm); // 한 페이지 픽셀 높이
+  const PRINTW=A4W-MARGIN*2;  // 194mm
+  const PRINTH=A4H-MARGIN*2;  // 281mm
+  const CAPW=780; // 캡처 폭(px)
+  const SCALE=2;
 
   const pdf=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
-  let offset=0,pageIdx=0;
 
-  while(offset<canvas.height){
-    const sliceH=Math.min(pageHpx, canvas.height-offset);
-    const tc=document.createElement('canvas');
-    tc.width=canvas.width;
-    tc.height=sliceH;
-    const tx=tc.getContext('2d');
-    tx.fillStyle='#fff';
-    tx.fillRect(0,0,tc.width,sliceH);
-    tx.drawImage(canvas,0,offset,canvas.width,sliceH,0,0,canvas.width,sliceH);
+  for(let ci=0; ci<cards.length; ci++){
+    const card=cards[ci];
+    const origStyle=card.getAttribute('style')||'';
 
-    const imgData=tc.toDataURL('image/jpeg',0.96);
-    const sliceHmm=(sliceH/canvas.width)*PRINTW;
+    // 캡처 전 임시 스타일
+    card.style.cssText=`width:${CAPW}px!important;max-width:${CAPW}px!important;
+      border-radius:0!important;margin:0!important;box-shadow:none!important;
+      overflow:visible!important;background:white!important;`;
 
-    if(pageIdx>0)pdf.addPage();
-    pdf.addImage(imgData,'JPEG',MARGIN,MARGIN,PRINTW,sliceHmm);
+    await new Promise(r=>setTimeout(r,60));
 
-    offset+=sliceH;
-    pageIdx++;
+    // 체크박스 상태를 미리 읽어둠 (onclone 전에)
+    const cbStates=[];
+    card.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cbStates.push(cb.checked);
+    });
+
+    const canvas=await html2canvas(card,{
+      scale:SCALE,
+      useCORS:true,
+      allowTaint:true,
+      logging:false,
+      backgroundColor:'#ffffff',
+      width:CAPW,
+      windowWidth:CAPW+100,
+      onclone(doc, el){
+        // ── 체크박스 교체 (미리 읽어둔 상태 사용) ──
+        const cbs=el.querySelectorAll('input[type=checkbox]');
+        cbs.forEach((cb,i)=>{
+          const s=doc.createElement('span');
+          s.textContent=cbStates[i]?'☑':'☐';
+          s.style.cssText='font-size:15px;line-height:1;vertical-align:middle;display:inline-block;margin-right:2px;';
+          cb.parentNode.replaceChild(s,cb);
+        });
+
+        // ── text/date/time input → span ──
+        el.querySelectorAll('input[type=text],input[type=date],input[type=time]').forEach(inp=>{
+          const s=doc.createElement('span');
+          s.textContent=inp.value||'';
+          s.style.cssText='font-size:12px;display:inline-block;width:100%;word-break:break-all;font-family:inherit;line-height:1.5;padding:2px 0;';
+          inp.parentNode.replaceChild(s,inp);
+        });
+
+        // ── textarea → span ──
+        el.querySelectorAll('textarea').forEach(ta=>{
+          const s=doc.createElement('span');
+          s.textContent=ta.value||'';
+          s.style.cssText='font-size:12px;display:block;width:100%;white-space:pre-wrap;font-family:inherit;';
+          ta.parentNode.replaceChild(s,ta);
+        });
+
+        // ── sigrow: 고정 높이 설정으로 잘림 방지 ──
+        el.querySelectorAll('.sigrow').forEach(row=>{
+          row.style.overflow='visible';
+          row.style.paddingBottom='20px';
+          row.style.minHeight='100px';
+        });
+        el.querySelectorAll('.si').forEach(si=>{
+          si.style.overflow='visible';
+          si.style.minHeight='80px';
+        });
+        el.querySelectorAll('.si input').forEach(inp=>{
+          // 이미 span으로 교체됐을 수 있음 - 남은 것만
+          inp.style.display='block';
+          inp.style.minHeight='28px';
+          inp.style.overflow='visible';
+        });
+
+        // ── 서명 canvas: 실제 크기로 고정 ──
+        el.querySelectorAll('.sigpad').forEach(pad=>{
+          pad.style.overflow='visible';
+          pad.style.height='54px';
+          pad.style.minHeight='54px';
+          pad.style.maxHeight='54px';
+        });
+        el.querySelectorAll('.sigpad canvas').forEach(cv=>{
+          cv.style.height='54px';
+          cv.style.maxHeight='54px';
+        });
+
+        // ── overflow 전체 해제 ──
+        el.querySelectorAll('*').forEach(e=>{
+          if(!e.classList.contains('sigpad'))
+            e.style.overflow='visible';
+        });
+
+        // ── 불필요한 UI 숨기기 ──
+        el.querySelectorAll('.sig-clear,.sighint,.badge.edit').forEach(e=>{e.style.display='none';});
+      }
+    });
+
+    // 원래 스타일 복원
+    card.setAttribute('style',origStyle);
+
+    // 이미지 → PDF (A4 한 페이지에 fit)
+    const imgData=canvas.toDataURL('image/jpeg',0.95);
+    const imgAspect=canvas.height/canvas.width;
+    const imgHmm=imgAspect*PRINTW;
+
+    if(ci>0) pdf.addPage();
+
+    if(imgHmm<=PRINTH){
+      // 한 페이지에 들어감 → 상단 정렬
+      pdf.addImage(imgData,'JPEG',MARGIN,MARGIN,PRINTW,imgHmm);
+    } else {
+      // 넘치면 A4 높이에 맞게 축소
+      const scale=PRINTH/imgHmm;
+      const fitW=PRINTW*scale;
+      const fitH=PRINTH;
+      const offsetX=MARGIN+(PRINTW-fitW)/2;
+      pdf.addImage(imgData,'JPEG',offsetX,MARGIN,fitW,fitH);
+    }
   }
 
   pdf.save(fn);
