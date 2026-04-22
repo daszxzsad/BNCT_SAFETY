@@ -5,6 +5,7 @@ const BASE_URL = process.env.BASE_URL || 'https://bnct-safety.vercel.app';
 // 환경변수 설정 필요:
 // APPROVER_NAME  = 최종 승인자 이름 (예: 이병문)
 // APPROVER_EMAIL = 최종 승인자 이메일 (예: bm.lee@bnctkorea.com)
+// CC_EMAIL       = 참조 이메일 (예: hj.park@bnctkorea.com - 박형진)
 // SYSTEM_NAME    = 시스템 이름 (예: BNCT 전자결재)
 
 function makeTransporter() {
@@ -67,6 +68,7 @@ module.exports = async function handler(req, res) {
 
     const approverName  = process.env.APPROVER_NAME  || '승인 담당자';
     const approverEmail = process.env.APPROVER_EMAIL || '';
+    const ccEmail       = process.env.CC_EMAIL       || ''; // 박형진
 
     if (step === 's3') {
       await supabase.from('permits').update({
@@ -77,10 +79,10 @@ module.exports = async function handler(req, res) {
         status: 'pending_s4'
       }).eq('token', token);
 
-      // 승인자에게 이메일
+      // 승인자(이병문)에게 S4 서명 요청 이메일 + 박형진 CC
       if (approverEmail) {
         const url = `${BASE_URL}/sign?token=${token}&role=s4`;
-        await makeTransporter().sendMail({
+        const mailOpts = {
           from: `"${process.env.SYSTEM_NAME||'전자결재 시스템'}" <${process.env.GMAIL_USER}>`,
           to: `"${approverName}" <${approverEmail}>`,
           subject: `[전자결재] ${proj} - ${comp} Section 4 서명 요청`,
@@ -89,7 +91,9 @@ module.exports = async function handler(req, res) {
             `<div style="background:#e8f0fe;border-left:4px solid #1565c0;padding:12px 16px;border-radius:4px;font-size:13px;margin-bottom:16px;">담당자 Section 3 서명 완료 — 최종 승인이 필요합니다.</div>`,
             'Section 4 서명하러 가기', url, info
           )
-        });
+        };
+        if (ccEmail) mailOpts.cc = ccEmail;
+        await makeTransporter().sendMail(mailOpts);
       }
       return res.status(200).json({ success: true, status: 'pending_s4' });
 
@@ -103,27 +107,31 @@ module.exports = async function handler(req, res) {
         status: 'active'
       }).eq('token', token);
 
-      // 담당자 + 승인자 둘 다에게 완료 이메일
+      // 담당자 + 승인자 둘 다에게 완료 이메일 + 박형진 CC
       const activeUrl = `${BASE_URL}/sign?token=${token}&role=active`;
       const transporter = makeTransporter();
       const subject = `[전자결재] ${proj} - ${comp} 승인 완료`;
       const body = `<div style="background:#d4edda;border-left:4px solid #28a745;padding:12px 16px;border-radius:4px;font-size:13px;margin-bottom:16px;">✅ Section 3, 4 서명 완료 — Section 5~10은 아래 링크에서 작성 가능합니다.</div>`;
 
       if (mgr.email) {
-        await transporter.sendMail({
+        const mailOpts = {
           from: `"${process.env.SYSTEM_NAME||'전자결재 시스템'}" <${process.env.GMAIL_USER}>`,
           to: `"${mgr.name}" <${mgr.email}>`,
           subject,
           html: emailLayout(`안녕하세요, <strong>${mgr.name}</strong>님.<br>작업허가서 승인이 완료되었습니다.`, body, 'Section 5~10 작성하러 가기', activeUrl, info)
-        });
+        };
+        if (ccEmail) mailOpts.cc = ccEmail;
+        await transporter.sendMail(mailOpts);
       }
       if (approverEmail) {
-        await transporter.sendMail({
+        const mailOpts = {
           from: `"${process.env.SYSTEM_NAME||'전자결재 시스템'}" <${process.env.GMAIL_USER}>`,
           to: `"${approverName}" <${approverEmail}>`,
           subject,
           html: emailLayout(`안녕하세요, <strong>${approverName}</strong>님.<br>귀하의 서명이 저장되었습니다.`, body, 'Section 5~10 작성하러 가기', activeUrl, info)
-        });
+        };
+        if (ccEmail) mailOpts.cc = ccEmail;
+        await transporter.sendMail(mailOpts);
       }
       return res.status(200).json({ success: true, status: 'active' });
 
