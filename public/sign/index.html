@@ -544,7 +544,7 @@ async function doSign(){
   }catch(e){ld(false);alert('오류: '+e.message);document.getElementById('btnSubmit').disabled=false;}
 }
 
-// ── PDF 생성 ── 카드 단위로 캡처, 각 카드를 A4 1페이지에 fit
+// ── PDF 생성 ──
 async function generatePDF(){
   const{jsPDF}=window.jspdf;
   const cards=Array.from(document.querySelectorAll('#formWrap .card'));
@@ -553,127 +553,149 @@ async function generatePDF(){
   const d=new Date(),pad=n=>String(n).padStart(2,'0');
   const fn=`안전서류_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}.pdf`;
 
-  const MARGIN=8; // mm
+  const MARGIN=8;
   const A4W=210, A4H=297;
-  const PRINTW=A4W-MARGIN*2;  // 194mm
-  const PRINTH=A4H-MARGIN*2;  // 281mm
-  const CAPW=780; // 캡처 폭(px)
+  const PRINTW=A4W-MARGIN*2;   // 194mm
+  const PRINTH=A4H-MARGIN*2;   // 281mm
+  const CAPW=820;
   const SCALE=2;
 
   const pdf=new jsPDF({orientation:'p',unit:'mm',format:'a4'});
+  let pageIdx=0;
 
-  for(let ci=0; ci<cards.length; ci++){
-    const card=cards[ci];
-    const origStyle=card.getAttribute('style')||'';
-
-    // 캡처 전 임시 스타일
-    card.style.cssText=`width:${CAPW}px!important;max-width:${CAPW}px!important;
+  // 단일 카드(또는 임시div) 캡처 → PDF 추가
+  async function addToPDF(el){
+    const origStyle=el.getAttribute('style')||'';
+    el.style.cssText=`width:${CAPW}px!important;max-width:${CAPW}px!important;
       border-radius:0!important;margin:0!important;box-shadow:none!important;
       overflow:visible!important;background:white!important;`;
 
+    // 체크박스 상태 미리 수집
+    const cbStates=[];
+    el.querySelectorAll('input[type=checkbox]').forEach(cb=>cbStates.push(cb.checked));
+
     await new Promise(r=>setTimeout(r,60));
 
-    // 체크박스 상태를 미리 읽어둠 (onclone 전에)
-    const cbStates=[];
-    card.querySelectorAll('input[type=checkbox]').forEach(cb=>{
-      cbStates.push(cb.checked);
-    });
-
-    const canvas=await html2canvas(card,{
+    const canvas=await html2canvas(el,{
       scale:SCALE,
       useCORS:true,
       allowTaint:true,
       logging:false,
       backgroundColor:'#ffffff',
       width:CAPW,
-      windowWidth:CAPW+100,
-      onclone(doc, el){
-        // ── 체크박스 교체 (미리 읽어둔 상태 사용) ──
-        const cbs=el.querySelectorAll('input[type=checkbox]');
-        cbs.forEach((cb,i)=>{
+      windowWidth:CAPW+200,
+      onclone(doc,cloned){
+        // 체크박스 → ☑/☐
+        cloned.querySelectorAll('input[type=checkbox]').forEach((cb,i)=>{
           const s=doc.createElement('span');
           s.textContent=cbStates[i]?'☑':'☐';
-          s.style.cssText='font-size:15px;line-height:1;vertical-align:middle;display:inline-block;margin-right:2px;';
+          s.style.cssText='font-size:14px;line-height:1;vertical-align:middle;display:inline-block;margin-right:2px;';
           cb.parentNode.replaceChild(s,cb);
         });
-
-        // ── text/date/time input → span ──
-        el.querySelectorAll('input[type=text],input[type=date],input[type=time]').forEach(inp=>{
+        // text/date/time → span
+        cloned.querySelectorAll('input[type=text],input[type=date],input[type=time]').forEach(inp=>{
           const s=doc.createElement('span');
           s.textContent=inp.value||'';
-          s.style.cssText='font-size:12px;display:inline-block;width:100%;word-break:break-all;font-family:inherit;line-height:1.5;padding:2px 0;';
+          s.style.cssText='font-size:11.5px;display:inline-block;width:100%;word-break:break-all;font-family:inherit;line-height:1.5;padding:2px 0;';
           inp.parentNode.replaceChild(s,inp);
         });
-
-        // ── textarea → span ──
-        el.querySelectorAll('textarea').forEach(ta=>{
+        // textarea → span
+        cloned.querySelectorAll('textarea').forEach(ta=>{
           const s=doc.createElement('span');
           s.textContent=ta.value||'';
-          s.style.cssText='font-size:12px;display:block;width:100%;white-space:pre-wrap;font-family:inherit;';
+          s.style.cssText='font-size:11.5px;display:block;width:100%;white-space:pre-wrap;font-family:inherit;';
           ta.parentNode.replaceChild(s,ta);
         });
 
-        // ── sigrow: 고정 높이 설정으로 잘림 방지 ──
-        el.querySelectorAll('.sigrow').forEach(row=>{
+        // ── sigrow 완전 고정 (잘림 방지 핵심) ──
+        cloned.querySelectorAll('.sigrow').forEach(row=>{
+          // grid를 flex로 바꿔서 overflow 문제 제거
+          row.style.display='flex';
+          row.style.flexWrap='nowrap';
+          row.style.gap='8px';
+          row.style.padding='10px 10px 20px 10px';
           row.style.overflow='visible';
-          row.style.paddingBottom='20px';
-          row.style.minHeight='100px';
+          row.style.height='auto';
+          row.style.minHeight='90px';
+          row.style.background='#f5f7fa';
+          row.style.borderRadius='0';
+          row.style.border='1px solid #d1dae8';
         });
-        el.querySelectorAll('.si').forEach(si=>{
+        cloned.querySelectorAll('.si').forEach(si=>{
+          si.style.flex='1';
+          si.style.display='flex';
+          si.style.flexDirection='column';
+          si.style.gap='4px';
           si.style.overflow='visible';
           si.style.minHeight='80px';
         });
-        el.querySelectorAll('.si input').forEach(inp=>{
-          // 이미 span으로 교체됐을 수 있음 - 남은 것만
-          inp.style.display='block';
-          inp.style.minHeight='28px';
-          inp.style.overflow='visible';
+        cloned.querySelectorAll('.si-lbl').forEach(lbl=>{
+          lbl.style.fontSize='10px';
+          lbl.style.fontWeight='700';
+          lbl.style.color='#9aa8bc';
+        });
+        // 서명 패드 고정
+        cloned.querySelectorAll('.sigpad').forEach(pad=>{
+          pad.style.height='52px';
+          pad.style.minHeight='52px';
+          pad.style.maxHeight='52px';
+          pad.style.overflow='hidden';
+          pad.style.flexShrink='0';
+        });
+        cloned.querySelectorAll('.sigpad canvas').forEach(cv=>{
+          cv.style.width='100%';
+          cv.style.height='52px';
+          cv.style.maxHeight='52px';
+          cv.style.display='block';
+        });
+        // si 중 서명 컬럼은 flex:2
+        cloned.querySelectorAll('.si').forEach(si=>{
+          const pad=si.querySelector('.sigpad');
+          if(pad) si.style.flex='2';
         });
 
-        // ── 서명 canvas: 실제 크기로 고정 ──
-        el.querySelectorAll('.sigpad').forEach(pad=>{
-          pad.style.overflow='visible';
-          pad.style.height='54px';
-          pad.style.minHeight='54px';
-          pad.style.maxHeight='54px';
+        // 전체 overflow 해제
+        cloned.querySelectorAll('table,tr,td,th,div,p').forEach(e=>{
+          if(!e.classList.contains('sigpad')) e.style.overflow='visible';
         });
-        el.querySelectorAll('.sigpad canvas').forEach(cv=>{
-          cv.style.height='54px';
-          cv.style.maxHeight='54px';
-        });
-
-        // ── overflow 전체 해제 ──
-        el.querySelectorAll('*').forEach(e=>{
-          if(!e.classList.contains('sigpad'))
-            e.style.overflow='visible';
-        });
-
-        // ── 불필요한 UI 숨기기 ──
-        el.querySelectorAll('.sig-clear,.sighint,.badge.edit').forEach(e=>{e.style.display='none';});
+        // UI 제거
+        cloned.querySelectorAll('.sig-clear,.sighint,.badge.edit').forEach(e=>{e.style.display='none';});
       }
     });
 
-    // 원래 스타일 복원
-    card.setAttribute('style',origStyle);
+    el.setAttribute('style',origStyle);
 
-    // 이미지 → PDF (A4 한 페이지에 fit)
     const imgData=canvas.toDataURL('image/jpeg',0.95);
-    const imgAspect=canvas.height/canvas.width;
-    const imgHmm=imgAspect*PRINTW;
+    const imgHmm=(canvas.height/canvas.width)*PRINTW;
 
-    if(ci>0) pdf.addPage();
+    if(pageIdx>0) pdf.addPage();
 
     if(imgHmm<=PRINTH){
-      // 한 페이지에 들어감 → 상단 정렬
+      // A4 한 장에 들어감 → 폭 100%, 상단 정렬
       pdf.addImage(imgData,'JPEG',MARGIN,MARGIN,PRINTW,imgHmm);
     } else {
-      // 넘치면 A4 높이에 맞게 축소
-      const scale=PRINTH/imgHmm;
-      const fitW=PRINTW*scale;
-      const fitH=PRINTH;
-      const offsetX=MARGIN+(PRINTW-fitW)/2;
-      pdf.addImage(imgData,'JPEG',offsetX,MARGIN,fitW,fitH);
+      // 길면 A4 단위로 슬라이싱
+      const pxPerMm=canvas.width/PRINTW;
+      const pageHpx=Math.floor(PRINTH*pxPerMm);
+      let offset=0, first=true;
+      while(offset<canvas.height){
+        const sliceH=Math.min(pageHpx,canvas.height-offset);
+        const tc=document.createElement('canvas');
+        tc.width=canvas.width; tc.height=sliceH;
+        const tx=tc.getContext('2d');
+        tx.fillStyle='#fff'; tx.fillRect(0,0,tc.width,sliceH);
+        tx.drawImage(canvas,0,offset,canvas.width,sliceH,0,0,canvas.width,sliceH);
+        if(!first){pdf.addPage();pageIdx++;}
+        const sh=(sliceH/canvas.width)*PRINTW;
+        pdf.addImage(tc.toDataURL('image/jpeg',0.95),'JPEG',MARGIN,MARGIN,PRINTW,sh);
+        offset+=pageHpx; first=false;
+      }
     }
+    pageIdx++;
+  }
+
+  for(const card of cards){
+    await addToPDF(card);
   }
 
   pdf.save(fn);
