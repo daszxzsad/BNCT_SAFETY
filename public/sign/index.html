@@ -596,7 +596,7 @@ async function generatePDF(){
         cloned.querySelectorAll('input[type=text],input[type=date],input[type=time]').forEach(inp=>{
           const s=doc.createElement('span');
           s.textContent=inp.value||'';
-          s.style.cssText='font-size:11.5px;display:inline-block;width:100%;word-break:break-all;font-family:inherit;line-height:1.5;padding:2px 0;';
+          s.style.cssText='font-size:11.5px;display:block;width:100%;word-break:break-all;font-family:inherit;line-height:1.5;';
           inp.parentNode.replaceChild(s,inp);
         });
         // textarea → span
@@ -607,57 +607,50 @@ async function generatePDF(){
           ta.parentNode.replaceChild(s,ta);
         });
 
-        // ── sigrow 완전 고정 (잘림 방지 핵심) ──
+        // ── sigrow → 테이블로 완전 교체 (박스 제거, 깔끔한 한 줄) ──
         cloned.querySelectorAll('.sigrow').forEach(row=>{
-          // grid를 flex로 바꿔서 overflow 문제 제거
-          row.style.display='flex';
-          row.style.flexWrap='nowrap';
-          row.style.gap='8px';
-          row.style.padding='10px 10px 20px 10px';
-          row.style.overflow='visible';
-          row.style.height='auto';
-          row.style.minHeight='90px';
-          row.style.background='#f5f7fa';
-          row.style.borderRadius='0';
-          row.style.border='1px solid #d1dae8';
-        });
-        cloned.querySelectorAll('.si').forEach(si=>{
-          si.style.flex='1';
-          si.style.display='flex';
-          si.style.flexDirection='column';
-          si.style.gap='4px';
-          si.style.overflow='visible';
-          si.style.minHeight='80px';
-        });
-        cloned.querySelectorAll('.si-lbl').forEach(lbl=>{
-          lbl.style.fontSize='10px';
-          lbl.style.fontWeight='700';
-          lbl.style.color='#9aa8bc';
-        });
-        // 서명 패드 고정
-        cloned.querySelectorAll('.sigpad').forEach(pad=>{
-          pad.style.height='52px';
-          pad.style.minHeight='52px';
-          pad.style.maxHeight='52px';
-          pad.style.overflow='hidden';
-          pad.style.flexShrink='0';
-        });
-        cloned.querySelectorAll('.sigpad canvas').forEach(cv=>{
-          cv.style.width='100%';
-          cv.style.height='52px';
-          cv.style.maxHeight='52px';
-          cv.style.display='block';
-        });
-        // si 중 서명 컬럼은 flex:2
-        cloned.querySelectorAll('.si').forEach(si=>{
-          const pad=si.querySelector('.sigpad');
-          if(pad) si.style.flex='2';
+          const sis=Array.from(row.querySelectorAll('.si'));
+          const tbl=doc.createElement('table');
+          tbl.style.cssText='width:100%;border-collapse:collapse;table-layout:fixed;margin:10px 0 6px 0;';
+          const thead=doc.createElement('tr');
+          const tbody=doc.createElement('tr');
+          sis.forEach((si,idx)=>{
+            const lbl=si.querySelector('.si-lbl');
+            const th=doc.createElement('th');
+            th.style.cssText='font-size:10px;font-weight:700;color:#9aa8bc;padding:3px 8px;text-align:left;background:transparent;border:none;';
+            th.textContent=lbl?lbl.textContent:'';
+            thead.appendChild(th);
+
+            const td=doc.createElement('td');
+            td.style.cssText='padding:3px 8px;vertical-align:middle;border:none;height:44px;';
+
+            const sigpad=si.querySelector('.sigpad');
+            if(sigpad){
+              const cv=sigpad.querySelector('canvas');
+              if(cv){
+                const img=doc.createElement('img');
+                try{ img.src=cv.toDataURL('image/jpeg',0.9); }catch(e){}
+                img.style.cssText='max-width:100%;height:40px;object-fit:contain;display:block;';
+                td.appendChild(img);
+              }
+            } else {
+              const spans=si.querySelectorAll('span:not(.si-lbl)');
+              spans.forEach(sp=>{
+                const ns=doc.createElement('span');
+                ns.textContent=sp.textContent||'';
+                ns.style.cssText='font-size:12px;display:block;font-family:inherit;line-height:1.4;color:#1a2332;';
+                td.appendChild(ns);
+              });
+            }
+            tbody.appendChild(td);
+          });
+          tbl.appendChild(thead);
+          tbl.appendChild(tbody);
+          row.parentNode.replaceChild(tbl,row);
         });
 
         // 전체 overflow 해제
-        cloned.querySelectorAll('table,tr,td,th,div,p').forEach(e=>{
-          if(!e.classList.contains('sigpad')) e.style.overflow='visible';
-        });
+        cloned.querySelectorAll('table,tr,td,th,div,p').forEach(e=>{e.style.overflow='visible';});
         // UI 제거
         cloned.querySelectorAll('.sig-clear,.sighint,.badge.edit').forEach(e=>{e.style.display='none';});
       }
