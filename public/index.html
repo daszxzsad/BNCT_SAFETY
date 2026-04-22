@@ -844,6 +844,17 @@ function sigBlock(w,h,id) {
   return '<div class="sig-area" style="width:'+w+'px;height:'+h+'px;"><canvas class="sig-canvas" '+canvasId+' width="'+w+'" height="'+h+'"></canvas><div class="sig-label">여기에 서명하세요</div><button class="sig-clear-btn" onclick="clearSig(this)">지우기</button></div>';
 }
 
+// ── 섹션별 전체 선택 토글 ────────────────────────────────
+function toggleAllChecks(btn) {
+  var targetId = btn.dataset.target;
+  var container = document.getElementById(targetId);
+  if(!container) return;
+  var cbs = container.querySelectorAll('input[type="checkbox"]');
+  var allChecked = Array.from(cbs).every(function(cb){ return cb.checked; });
+  cbs.forEach(function(cb){ cb.checked = !allChecked; });
+  btn.textContent = allChecked ? '전체 선택' : '전체 해제';
+}
+
 // ── 제출 ─────────────────────────────────────────────────
 function submitForms() {
   var selected=[];
@@ -893,11 +904,19 @@ async function doSubmit(recipients) {
     var company=document.getElementById('companyName').value||'(미입력)';
     var workerCount=document.getElementById('workerCount').value;
 
-    // Section 2 체크박스 수집
-    var s2Checks = [];
-    document.querySelectorAll('#page-permit-main .permit-section .check-cb').forEach(function(cb,i){
-      if(cb.checked) s2Checks.push(i);
+    // Section 1 고위험군 + Section 2 체크박스 각각 수집
+    var s1Checks = [];
+    document.querySelectorAll('#page-permit-main input[data-s1="1"]').forEach(function(cb){
+      if(cb.checked) s1Checks.push(parseInt(cb.dataset.idx,10));
     });
+    var s2Checks = [];
+    document.querySelectorAll('#page-permit-main input[data-s2="1"]').forEach(function(cb){
+      if(cb.checked) s2Checks.push(parseInt(cb.dataset.idx,10));
+    });
+    console.log('[제출] S1 고위험군 체크:', s1Checks);
+    console.log('[제출] S2 체크리스트:', s2Checks);
+    console.log('[제출] S1 체크박스 개수:', document.querySelectorAll('#page-permit-main input[data-s1="1"]').length);
+    console.log('[제출] S2 체크박스 개수:', document.querySelectorAll('#page-permit-main input[data-s2="1"]').length);
 
     var collectedFormData = {
       's1-work':    gv('s1-work'),
@@ -909,6 +928,7 @@ async function doSubmit(recipients) {
       's2-date':    gv('s2-date'),
       's2-time':    gv('s2-time'),
       'sig2_img':   getSigData(s2sigCanvas),
+      's1_checks':  JSON.stringify(s1Checks),
       's2_checks':  JSON.stringify(s2Checks)
     };
     // 안전서약서 서명 추가
@@ -1248,18 +1268,23 @@ function buildPermitForm(f) {
   // 고위험군 작업 체크
   +'<div class="permit-section">'
   +'<div style="border:1px solid #999;padding:8px 12px;">'
-  +'<div style="font-size:12px;font-weight:700;margin-bottom:6px;">본 작업허가서 발급이 필요한 특정 고위험군 작업: <span style="font-weight:400;">해당하는 네모 칸에 표시를 하고 관련 양식을 첨부하시오.</span></div>'
-  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 20px;font-size:12px;">'
+  +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+  +'<div style="font-size:12px;font-weight:700;">본 작업허가서 발급이 필요한 특정 고위험군 작업: <span style="font-weight:400;">해당하는 네모 칸에 표시를 하시오.</span></div>'
+  +'<button type="button" onclick="toggleAllChecks(this)" data-target="s1hazard" style="font-size:11px;padding:3px 10px;border:1px solid #1565c0;background:white;color:#1565c0;border-radius:4px;cursor:pointer;font-family:inherit;">전체 선택</button>'
+  +'</div>'
+  +'<div id="s1hazard" style="display:grid;grid-template-columns:1fr 1fr;gap:5px 20px;font-size:12px;">'
   +['화기 작업','토공/굴착 작업','밀폐공간출입작업','설비/장비 격리','고소 작업','기계적 인양 작업','고압 스위치 접근 및 시험 작업 허가','전기 유지보수작업']
-    .map(function(item){ return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" class="check-cb"> '+item+'</label>'; }).join('')
+    .map(function(item,i){ return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;"><input type="checkbox" class="check-cb" data-s1="1" data-idx="'+i+'"> '+item+'</label>'; }).join('')
   +'</div></div></div>'
 
   // Section 2
-  +'<div class="permit-section"><div class="permit-section-title" style="font-size:13px;">Section 2: 승인 요청 (작업 업체 관리 감독자 작성)</div>'
+  +'<div class="permit-section"><div class="permit-section-title" style="font-size:13px;display:flex;justify-content:space-between;align-items:center;"><span>Section 2: 승인 요청 (작업 업체 관리 감독자 작성)</span>'
+  +'<button type="button" onclick="toggleAllChecks(this)" data-target="s2items" style="font-size:11px;padding:3px 10px;border:1px solid white;background:transparent;color:white;border-radius:4px;cursor:pointer;font-family:inherit;">전체 선택</button></div>'
   +'<div style="padding:8px 12px;border:1px solid #999;font-size:12px;line-height:2.0;border-top:none;">'
   +'<div style="margin-bottom:4px;">본인은 고위험군 작업을 한 허가를 요청하는 사람으로써, 다음 사항을 확인한다.</div>'
-  +items2.map(function(i){ return '<label style="display:flex;align-items:flex-start;gap:6px;margin-bottom:2px;"><input type="checkbox" class="check-cb" style="margin-top:3px;flex-shrink:0;"> <span>'+i+'</span></label>'; }).join('')
-  +'</div>'
+  +'<div id="s2items">'
+  +items2.map(function(i,idx){ return '<label style="display:flex;align-items:flex-start;gap:6px;margin-bottom:2px;"><input type="checkbox" class="check-cb" data-s2="1" data-idx="'+idx+'" style="margin-top:3px;flex-shrink:0;"> <span>'+i+'</span></label>'; }).join('')
+  +'</div></div>'
   +sigRow('s2')+'</div>'
 
   // Section 3
