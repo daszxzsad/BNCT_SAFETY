@@ -576,6 +576,24 @@ async function generatePDF(){
 
     await new Promise(r=>setTimeout(r,60));
 
+    // ── 원본 DOM에서 sigrow 데이터를 미리 수집 (onclone 전) ──
+    const sigData=[];
+    el.querySelectorAll('.sigrow').forEach(row=>{
+      const items=[];
+      row.querySelectorAll('.si').forEach(si=>{
+        const lbl=si.querySelector('.si-lbl')?.textContent||'';
+        const inp=si.querySelector('input');
+        const cv=si.querySelector('canvas');
+        let value='', imgSrc='';
+        if(inp) value=inp.value||'';
+        if(cv){
+          try{ imgSrc=cv.toDataURL('image/png'); }catch(e){ imgSrc=''; }
+        }
+        items.push({label:lbl, value, imgSrc, hasCanvas:!!cv});
+      });
+      sigData.push(items);
+    });
+
     const canvas=await html2canvas(el,{
       scale:SCALE,
       useCORS:true,
@@ -592,61 +610,55 @@ async function generatePDF(){
           s.style.cssText='font-size:14px;line-height:1;vertical-align:middle;display:inline-block;margin-right:2px;';
           cb.parentNode.replaceChild(s,cb);
         });
-        // text/date/time → span
-        cloned.querySelectorAll('input[type=text],input[type=date],input[type=time]').forEach(inp=>{
-          const s=doc.createElement('span');
-          s.textContent=inp.value||'';
-          s.style.cssText='font-size:11.5px;display:block;width:100%;word-break:break-all;font-family:inherit;line-height:1.5;';
-          inp.parentNode.replaceChild(s,inp);
-        });
-        // textarea → span
-        cloned.querySelectorAll('textarea').forEach(ta=>{
-          const s=doc.createElement('span');
-          s.textContent=ta.value||'';
-          s.style.cssText='font-size:11.5px;display:block;width:100%;white-space:pre-wrap;font-family:inherit;';
-          ta.parentNode.replaceChild(s,ta);
-        });
 
-        // ── sigrow → 테이블로 완전 교체 (박스 제거, 깔끔한 한 줄) ──
-        cloned.querySelectorAll('.sigrow').forEach(row=>{
-          const sis=Array.from(row.querySelectorAll('.si'));
+        // ── sigrow 먼저 교체 (input이 span으로 바뀌기 전에) ──
+        const rows=cloned.querySelectorAll('.sigrow');
+        rows.forEach((row,ri)=>{
+          const rowData=sigData[ri]||[];
           const tbl=doc.createElement('table');
-          tbl.style.cssText='width:100%;border-collapse:collapse;table-layout:fixed;margin:10px 0 6px 0;';
+          tbl.style.cssText='width:100%;border-collapse:collapse;table-layout:fixed;margin:10px 0 8px 0;';
           const thead=doc.createElement('tr');
           const tbody=doc.createElement('tr');
-          sis.forEach((si,idx)=>{
-            const lbl=si.querySelector('.si-lbl');
+          rowData.forEach(item=>{
             const th=doc.createElement('th');
             th.style.cssText='font-size:10px;font-weight:700;color:#9aa8bc;padding:3px 8px;text-align:left;background:transparent;border:none;';
-            th.textContent=lbl?lbl.textContent:'';
+            th.textContent=item.label;
             thead.appendChild(th);
 
             const td=doc.createElement('td');
-            td.style.cssText='padding:3px 8px;vertical-align:middle;border:none;height:44px;';
-
-            const sigpad=si.querySelector('.sigpad');
-            if(sigpad){
-              const cv=sigpad.querySelector('canvas');
-              if(cv){
+            td.style.cssText='padding:3px 8px;vertical-align:middle;border:none;height:48px;';
+            if(item.hasCanvas){
+              if(item.imgSrc){
                 const img=doc.createElement('img');
-                try{ img.src=cv.toDataURL('image/jpeg',0.9); }catch(e){}
-                img.style.cssText='max-width:100%;height:40px;object-fit:contain;display:block;';
+                img.src=item.imgSrc;
+                img.style.cssText='max-width:100%;height:44px;object-fit:contain;display:block;';
                 td.appendChild(img);
               }
             } else {
-              const spans=si.querySelectorAll('span:not(.si-lbl)');
-              spans.forEach(sp=>{
-                const ns=doc.createElement('span');
-                ns.textContent=sp.textContent||'';
-                ns.style.cssText='font-size:12px;display:block;font-family:inherit;line-height:1.4;color:#1a2332;';
-                td.appendChild(ns);
-              });
+              const sp=doc.createElement('span');
+              sp.textContent=item.value;
+              sp.style.cssText='font-size:13px;display:block;font-family:inherit;line-height:1.4;color:#1a2332;font-weight:500;';
+              td.appendChild(sp);
             }
             tbody.appendChild(td);
           });
           tbl.appendChild(thead);
           tbl.appendChild(tbody);
           row.parentNode.replaceChild(tbl,row);
+        });
+
+        // 나머지 input/textarea → span (sigrow는 이미 교체 완료 상태)
+        cloned.querySelectorAll('input[type=text],input[type=date],input[type=time]').forEach(inp=>{
+          const s=doc.createElement('span');
+          s.textContent=inp.value||'';
+          s.style.cssText='font-size:11.5px;display:block;width:100%;word-break:break-all;font-family:inherit;line-height:1.5;';
+          inp.parentNode.replaceChild(s,inp);
+        });
+        cloned.querySelectorAll('textarea').forEach(ta=>{
+          const s=doc.createElement('span');
+          s.textContent=ta.value||'';
+          s.style.cssText='font-size:11.5px;display:block;width:100%;white-space:pre-wrap;font-family:inherit;';
+          ta.parentNode.replaceChild(s,ta);
         });
 
         // 전체 overflow 해제
