@@ -19,7 +19,7 @@ body{font-family:'Noto Sans KR',Arial,sans-serif;background:#f0f4f8;color:#1a233
 .info-bar{background:white;border-bottom:2px solid #e0e7ef;padding:14px 24px;display:flex;gap:24px;flex-wrap:wrap;font-size:13px;}
 .info-item strong{color:#003087;}
 
-.container{max-width:860px;margin:24px auto;padding:0 16px 60px;}
+.container{max-width:1040px;margin:24px auto;padding:0 20px 80px;}
 
 .step-bar{display:flex;gap:0;margin-bottom:24px;border-radius:10px;overflow:hidden;border:1px solid #dde3ed;}
 .step{flex:1;padding:10px 8px;text-align:center;font-size:11px;font-weight:700;background:#f5f7fa;color:#9aa5b4;border-right:1px solid #dde3ed;}
@@ -27,7 +27,7 @@ body{font-family:'Noto Sans KR',Arial,sans-serif;background:#f0f4f8;color:#1a233
 .step.done{background:#e8f4fd;color:#1565c0;}
 .step.active{background:#003087;color:white;}
 
-.card{background:white;border-radius:10px;border:1px solid #e0e7ef;margin-bottom:16px;overflow:hidden;}
+.card{background:white;border-radius:10px;border:1px solid #e0e7ef;margin-bottom:16px;overflow:visible;}
 .card-header{padding:12px 18px;font-size:13px;font-weight:700;color:white;display:flex;align-items:center;gap:8px;}
 .card-header.s1{background:#1a3a6b;}
 .card-header.s2{background:#1a3a6b;}
@@ -38,7 +38,7 @@ body{font-family:'Noto Sans KR',Arial,sans-serif;background:#f0f4f8;color:#1a233
 .badge{background:rgba(255,255,255,.25);padding:2px 8px;border-radius:12px;font-size:10px;}
 .badge.editable{background:#ffd54f;color:#333;}
 
-.card-body{padding:16px 18px;}
+.card-body{padding:16px 18px;overflow:visible;}
 .ro-label{display:inline-block;background:#e3f2fd;color:#1565c0;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;}
 .ed-label{display:inline-block;background:#fff9c4;color:#f57f17;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-left:6px;}
 
@@ -57,7 +57,7 @@ table.pt input[readonly]{background:#f8faff;color:#333;}
 .checklist label input{margin-top:3px;flex-shrink:0;}
 .checklist label.ro{cursor:default;}
 
-.sigrow{display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:8px;margin-top:10px;padding:10px;background:#f8faff;border-radius:8px;border:1px solid #dde3ed;}
+.sigrow{display:grid;grid-template-columns:1fr 2fr 1fr 1fr;gap:8px;margin-top:10px;padding:10px;padding-bottom:14px;background:#f8faff;border-radius:8px;border:1px solid #dde3ed;overflow:visible;}
 .si{display:flex;flex-direction:column;gap:4px;}
 .si-lbl{font-size:11px;font-weight:700;color:#666;}
 .si input{border:1px solid #dde3ed;border-radius:5px;padding:5px 8px;font-size:12px;font-family:inherit;width:100%;}
@@ -101,6 +101,25 @@ table.pt input[readonly]{background:#f8faff;color:#333;}
 .alert-warn{background:#fff3e0;border-left:4px solid #f57c00;color:#e65100;}
 .alert-done{background:#e8f5e9;border-left:4px solid #2e7d32;color:#1b5e20;}
 .alert-lock{background:#fce4ec;border-left:4px solid #c62828;color:#b71c1c;}
+
+/* 추가양식 전용 스타일 */
+.ex-wrap{font-family:'Malgun Gothic','맑은 고딕','Noto Sans KR',sans-serif;font-size:12px;color:#111;}
+.ex-title-bar{display:flex;align-items:center;gap:10px;border:2px solid #c00;padding:6px 10px;margin-bottom:8px;}
+.ex-badge{background:#c00;color:white;font-size:11px;font-weight:700;padding:3px 8px;border-radius:2px;}
+.ex-title{font-size:16px;font-weight:900;letter-spacing:1px;}
+.ex-permitno{display:flex;justify-content:flex-end;margin-bottom:6px;}
+.ex-permitno-box{border:1.5px solid #555;display:flex;align-items:center;}
+.ex-permitno-label{background:#f0f0f0;padding:4px 10px;font-weight:700;border-right:1px solid #555;font-size:11px;}
+.ex-permitno-val{padding:4px 40px;font-size:11px;}
+.ex-sec{background:#1a5276;color:white;padding:5px 10px;font-weight:700;font-size:12px;margin:8px 0 4px;}
+.ex-sec.green{background:#1a6b2a;}
+.ex-notice{background:#fef9e7;border:1px solid #f0c040;padding:6px 10px;font-size:11.5px;margin-bottom:6px;line-height:1.6;}
+.ex-chkrow{display:flex;align-items:flex-start;gap:6px;padding:3px 0;font-size:11.5px;line-height:1.5;}
+.ex-chkrow input{margin-top:2px;flex-shrink:0;}
+.ex-tbl{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:2px;}
+.ex-tbl th{background:#dce6f1;padding:5px 8px;border:1px solid #aaa;font-weight:700;text-align:left;}
+.ex-tbl td{padding:5px 8px;border:1px solid #aaa;vertical-align:top;}
+.ex-tbl th.center,.ex-tbl td.center{text-align:center;width:40px;}
 </style>
 </head>
 <body>
@@ -522,77 +541,499 @@ function buildSigRowActive(id, s5, canEdit) {
   </div>`;
 }
 
-// ── 추가양식 빌더 ──────────────────────────────────
-function buildExtra(fm, f, ro) {
-  var labels = {hotwork:'화기작업 양식', height:'고소작업 양식', electric:'전기 유지보수 작업 양식', lifting:'기계적 인양 작업 양식'};
+// ── 추가양식 스타일 ──────────────────────────────────
+var extraCSS = `
+.ex-wrap{font-family:'Malgun Gothic','맑은 고딕','Noto Sans KR',sans-serif;font-size:12px;color:#111;}
+.ex-title-bar{display:flex;align-items:center;gap:10px;border:2px solid #c00;padding:6px 10px;margin-bottom:8px;}
+.ex-badge{background:#c00;color:white;font-size:11px;font-weight:700;padding:3px 8px;border-radius:2px;}
+.ex-title{font-size:18px;font-weight:900;letter-spacing:1px;}
+.ex-permitno{display:flex;justify-content:flex-end;margin-bottom:8px;}
+.ex-permitno-box{border:1.5px solid #555;display:flex;align-items:center;}
+.ex-permitno-label{background:#f0f0f0;padding:4px 10px;font-weight:700;border-right:1px solid #555;font-size:11px;}
+.ex-permitno-val{padding:4px 40px;font-size:11px;}
+.ex-sec{background:#1a5276;color:white;padding:5px 10px;font-weight:700;font-size:12px;margin:8px 0 4px;}
+.ex-sec.green{background:#1a6b2a;}
+.ex-sec.red{background:#922b21;}
+.ex-sec.orange{background:#784212;}
+.ex-sec.purple{background:#4a235a;}
+.ex-tbl{width:100%;border-collapse:collapse;font-size:11.5px;margin-bottom:4px;}
+.ex-tbl th{background:#dce6f1;padding:5px 8px;border:1px solid #aaa;font-weight:700;text-align:left;white-space:nowrap;}
+.ex-tbl td{padding:5px 8px;border:1px solid #aaa;vertical-align:top;}
+.ex-tbl th.center,.ex-tbl td.center{text-align:center;width:40px;}
+.ex-notice{background:#fef9e7;border:1px solid #f0c040;padding:6px 10px;font-size:11.5px;margin-bottom:6px;line-height:1.6;}
+.ex-chkrow{display:flex;align-items:flex-start;gap:6px;padding:3px 0;font-size:11.5px;line-height:1.5;}
+.ex-chkrow input{margin-top:2px;flex-shrink:0;}
+.ex-subhead{font-weight:700;font-size:11.5px;padding:4px 0 2px;}
+.ex-sigrow{display:grid;grid-template-columns:120px 1fr 120px 120px;gap:6px;border:1px solid #aaa;padding:6px 8px;margin-top:4px;background:#fafafa;}
+.ex-si{display:flex;flex-direction:column;gap:3px;}
+.ex-si-lbl{font-size:10px;font-weight:700;color:#555;}
+.ex-si-val{font-size:11.5px;padding:3px 0;border-bottom:1px solid #ccc;min-height:20px;}
+.ex-yn-row{display:flex;justify-content:space-between;align-items:center;padding:4px 8px;border-bottom:1px solid #eee;font-size:11.5px;}
+.ex-yn-btns{display:flex;gap:12px;}
+.ex-yn-btns label{display:flex;align-items:center;gap:3px;font-size:11.5px;}
+`;
 
-  // 저장된 추가양식 데이터
+function getExtraData(f, fmId) {
   var extra = {}; try { extra = JSON.parse(f['extra']||'{}'); } catch(e) {}
-  var pageData = extra[fm.id] || { inputs:{}, checks:[] };
+  var pd = extra[fmId] || { inputs:{}, checks:[] };
+  var idx = {i:0, c:0};
+  function iv() { return pd.inputs[idx.i++]||''; }
+  function ck() { var r=pd.checks.includes(idx.c); idx.c++; return r; }
+  return {iv, ck};
+}
 
-  // 양식별 체크박스 항목 정의
-  var itemDefs = {
-    hotwork: {
-      sections: [
-        { title:'Section 1 – 일반사항', fields:['작업명','작업 장소','접근 제한'] },
-        { title:'Section 2 – 일반 화기작업 / 발화요인 통제', checks:['소화기는 화기 작업 지점 10m 이내에 비치한다.','용접방화포나 불티 방지막을 설치한다.','가연성 물질 또는 연료원은 작업장소로부터 격리시킬 것','배수관, 전선 및 가연성 물질은 덮어둔다.','소방호스를 작업지점까지 끌어다두고 사용할 준비를 해둔다.','화재 감시자는 작업 중 및 작업 완료 후 작업 구역을 주시한다.'] },
-        { title:'Section 3 – 특정 화기작업 / 발화요인 통제', checks:['설비에 인접하여 화기작업이 이루어지는 경우 격리 필요','작업 개시 전 화재방지 또는 화재탐지 시스템 격리 필요','작업 공간 세척, 불순물 제거, 환기 또는 작업전 가스 농도 측정 필요','작업 개시 전 작업장소 준비 또는 작업 중 대기 모니터링 필요','작업 특성상 방독마스크 착용 필요','작업 특성상 가스 호스 또는 기타 민감한 시설/장비의 보호 조치 필요','아크 용접시, 감전 가능성을 최소화하기 위해 조치가 필요한 경우'] }
-      ]
-    },
-    height: {
-      sections: [
-        { title:'Section 1 – 고소작업 / 접근 방법', fields:['작업명','작업 유형','작업 장소/위치','접근 방법/고소 작업'] },
-        { title:'Section 2 – 고소작업차 관련 요구사항', checks:['작업자의 머리 위쪽 전선, 구조물 등의 위험요소로부터 최소 안전거리를 유지해야 한다','고소작업차를 평평한 곳에 설치하기 위해 특정 조치가 필요하다','고소작업차 주위에 바리케이트 또는 표지판을 설치해야한다.','붐 길이가 11m 이상이어서 면허증을 가진 고소작업차 기사가 필요하다.','고소작업차를 사용하는 작업자는 설치, 통제 및 비상 탈출에 대해 숙지하고 있다.'] }
-      ]
-    },
-    electric: {
-      sections: [
-        { title:'Section 1 – 일반 사항', fields:['작업명','위치'] },
-        { title:'반드시 필요한 조치', checks:['반드시 최신 설계도를 참고 해야함 (작업 개시 전)','자격증이 있는 전기 기술자만 작업 수행','설비/장비 책임자에게 반드시 알려야 함','격리 지점에 필요한 표지 부착','구조 키트는 점검 후 가까운 위치에 배치','점검 완료한 절연 테스트 도구 및 장비만 사용','모든 작업자가 금속 물질 제거해야만 함','안전보호구 필수 착용 구역 진입 시 방염복 착용','전기 절연 장갑의 손상 유무 및 시험 전압 확인','자외선 차단 기능이 있는 안면보호대 반드시 사용','작업 구역 접근 방지를 위해 바리케이드 반드시 설치'] }
-      ]
-    },
-    lifting: {
-      sections: [
-        { title:'SECTION 1 – 일반사항', fields:['작업명','작업 장소','작업 목적/유형'] },
-        { title:'SECTION 5 – 체크리스트', checks:['위험성 평가를 수행하였는가?','화물이 전원이 켜져있는 설비나 전선 위로 인양되고 있는가?','작업자는 장비에 익숙한가?','인양될 화물이 20톤을 초과하는가?','크레인 기사에게 알려야 할 사항이 있는가?','화물의 권상지점과 인양 방법을 파악하였는가?','인양 작업 지역의 전선에 대하여 확인하고 격리를 실시하였는가?','진입경로를 확보하고 장애물이 없는지 확인하였는가?','화물이 잘 묶여 있는지 확인하였는가?','악천후가 예상되는가?'] }
-      ]
-    }
-  };
+function roChkBox(checked) {
+  return `<input type="checkbox"${checked?' checked':''} disabled style="width:14px;height:14px;">`;
+}
 
-  var def = itemDefs[fm.type] || { sections:[] };
-  var inputIdx = 0;
-  var checkIdx = 0;
+function buildExtra(fm, f, ro) {
+  var extra = {}; try { extra = JSON.parse(f['extra']||'{}'); } catch(e) {}
+  var pd = extra[fm.id] || { inputs:{}, checks:[] };
+  var ii=0, ci=0;
+  function iv(){return pd.inputs[ii++]||'';}
+  function ck(){var r=(pd.checks||[]).includes(ci);ci++;return r;}
 
-  var sectionsHtml = def.sections.map(function(sec){
-    var html = '<div style="background:#2e7d32;color:white;padding:7px 12px;font-size:12px;font-weight:700;border-radius:4px;margin:10px 0 6px;">'+sec.title+'</div>';
-    if(sec.fields){
-      html += '<table class="pt">';
-      sec.fields.forEach(function(field){
-        var val = pageData.inputs[inputIdx]||'';
-        inputIdx++;
-        html += '<tr><th>'+field+'</th><td>'+val+'</td></tr>';
-      });
-      html += '</table>';
+  var inner = '';
+
+  if (fm.type === 'hotwork') {
+    // ── 화기작업 양식 ── 원본 PDF 완전 재현
+    var s1_work=iv(), s1_place=iv(), s1_restrict=iv();
+    var src_spark=ck(), src_slag=ck(), src_hot=ck(); var src_etc=iv();
+
+    // Section 2 일반 화기작업
+    var gen2 = [
+      '소화기는 화기 작업 지점 10m 이내에 비치한다.',
+      '작은 불티, 슬래그를 차단하기 위해 용접방화포나 불티 방지막을 바닥이나 철망판 위에 설치한다.',
+      '가연성 물질 또는 연료원은 작업장소로부터 격리시킬 것 (작업장소 표면, 위, 아래 포함 주변 15m 정도의 공간을 고려할 것)',
+      '배수관, 전선 및 가연성 물질은 덮어둔다. (작업장소 표면, 위, 아래 포함 주변 15m 정도의 공간을 고려해 방화 담요, 불티 방지막 등을 이용한다.)',
+      '소방호스를 작업지점까지 끌어다두고 사용할 준비를 해둔다 (야외작업의 경우에 적합하며 전기 장비가 없는 곳)',
+      '화재 감시자는 작업 중 또는/그리고 작업 완료 후에 작업 구역을 주시한다 (화재 위험, 불티, 슬래그, 뜨거운 물체가 있는지 살펴보기)'
+    ];
+    var g2yn=[]; gen2.forEach(()=>{ g2yn.push({y:ck(),n:ck(),txt:iv()}); });
+
+    // Section 3 특정 화기작업
+    var spec3 = [
+      '설비에 인접하여 화기작업이 이루어지는 경우 격리 필요 (파이프, 탱크, 압력 용기 등)',
+      '작업 개시 전 화재방지 또는 화재탐지 시스템 격리 필요 (장기간 격리의 경우 보험사에 통지 고려)',
+      '작업 공간 세척, 불순물 제거, 환기 또는 작업전 가스 농도 측정 필요 (작업장 주변의 인화성/폭발성 기체, 먼지, 액체 또는 고체 잔여물 때문)',
+      '작업 개시 전 작업장소 준비 (청소, 코팅제거) 또는 작업 중 대기 모니터링 필요 (표면이 절단되거나 가열될 때 표면/코팅에서 유해한 물질이 배출될 경우)',
+      '작업 특성상 방독마스크 착용 필요',
+      '작업 특성상 가스 호스 또는 기타 민감한 시설/장비의 보호 조치 필요',
+      '아크 용접시, 작업 장소로 인한 감전 가능성을 최소화하기 위해 조치가 필요한 경우 (물, 습기로 인한 경우, 주위 온도가 32도 이상인 경우 등)'
+    ];
+    var s3yn=[]; spec3.forEach(()=>{ s3yn.push({y:ck(),n:ck(),txt:iv()}); });
+
+    // Section 4 밀폐공간
+    var s4na=ck();
+    var sec4 = [
+      '장비는 밀폐 공간 밖에 설치(용접에 필요한 실린더, 호스 등) (단, 방독 마스크 제외)',
+      '환기장치를 사용할 경우, 환기장치의 후드를 오염원에 근접시킬 것',
+      '오염원을 밀폐공간에서 제거하여 오염원이 재순환하거나 다른 근로자들에게 해를 끼치지 못하게 할 것',
+      '아크 용접 작업이 장시간 중단될 경우, 전원을 끄고 호스 연결을 해체하고 가스 압력을 낮출 것',
+      '가스 용접/절단 작업이 장시간 중단될 경우, 토치와 실린더 밸브를 잠그고 토치와 호스 연결을 해체하고 가스 압력을 낮출 것'
+    ];
+    var s4yn=[]; sec4.forEach(()=>{ s4yn.push({y:ck(),n:ck()}); });
+
+    inner = `
+      <div class="ex-permitno"><div class="ex-permitno-box"><div class="ex-permitno-label">작업허가 번호</div><div class="ex-permitno-val"></div></div></div>
+
+      <div class="ex-sec">Section 1 – 일반사항</div>
+      <table class="ex-tbl">
+        <tr><th style="width:100px;">작업명<br><span style="font-weight:400;font-size:10px;">(작업 위험성 평가에 따름)</span></th><td colspan="3">${s1_work}</td></tr>
+        <tr><th>작업 장소</th><td colspan="3">${s1_place}</td></tr>
+        <tr><th>접근 제한<br><span style="font-weight:400;font-size:10px;">(특정 용접 작업 또는 위험지역이나 선장의 허가가 필요한 선박에서의 화기 작업으로 인한 경우)</span></th><td colspan="3">${s1_restrict}</td></tr>
+        <tr><th>잠재적 발화원</th><td colspan="3">
+          <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;">
+            <label style="display:flex;gap:4px;align-items:center;">${roChkBox(src_spark)} 불꽃 (용접, 납땜 등)</label>
+            <label style="display:flex;gap:4px;align-items:center;">${roChkBox(src_slag)} 불티 또는 슬래그 (연마, 절단, 마찰교반용접 도구, 용접 등)</label>
+            <label style="display:flex;gap:4px;align-items:center;">${roChkBox(src_hot)} 뜨거운 물체 (금속 표면, 철판 등)</label>
+            <span>기타: ${src_etc}</span>
+          </div>
+        </td></tr>
+      </table>
+
+      <div class="ex-sec">Section 2 – 일반 화기작업 /발화요인 통제</div>
+      <div style="font-size:11px;padding:3px 6px;margin-bottom:4px;color:#555;">일반 화기 작업 및 발화 통제가 필요한 경우: YES 또는 N/A(해당사항없음)으로 표기</div>
+      <table class="ex-tbl">
+        <thead><tr><th>조치 내용</th><th class="center">예</th><th class="center">아니오</th><th>조치</th></tr></thead>
+        <tbody>
+          ${g2yn.map((r,i)=>`<tr><td style="font-size:11px;">${gen2[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td><td style="font-size:11px;">${r.txt}</td></tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div class="ex-sec">Section 3 – 특정 화기작업 /발화요인 통제</div>
+      <table class="ex-tbl">
+        <thead><tr><th>필요한 조치</th><th class="center">예</th><th class="center">아니오</th><th>예에 표시한 경우, 조치 관련 설명 기재할 것</th></tr></thead>
+        <tbody>
+          ${s3yn.map((r,i)=>`<tr><td style="font-size:11px;">${spec3[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td><td style="font-size:11px;">${r.txt}</td></tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div class="ex-sec" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Section 4 – 추가 조치 (밀폐 공간의 경우)</span>
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;">${roChkBox(s4na)} 아니오 (해당사항없을경우)</label>
+      </div>
+      <table class="ex-tbl">
+        <thead><tr><th>필요한 조치</th><th class="center">예</th><th class="center">아니오</th></tr></thead>
+        <tbody>
+          ${s4yn.map((r,i)=>`<tr><td style="font-size:11px;">${sec4[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td></tr>`).join('')}
+        </tbody>
+      </table>`;
+
+  } else if (fm.type === 'height') {
+    // ── 고소작업 양식 (2페이지) ── 원본 PDF 완전 재현
+    var s1w=iv(),s1t=iv(),s1loc=iv(),s1acc=iv();
+
+    // Section 2 고소작업차
+    var s2na=ck();
+    var aerial=[
+      '작업자의 머리 위쪽에 위치한 전선, 구조물, 움직이는 장비 등의 위험요소로부터 최소 안전거리를 유지해야 한다',
+      '고소작업차를 평평한 곳에 설치하기 위해 특정 조치가 필요하다',
+      '(사람이나 장비 접근을 방지하기 위해) 고소작업차 주위에 바리케이트 또는 표지판을 설치해야한다.',
+      '붐 길이가 11m 이상이어서 면허증을 가진 고소작업차 기사가 필요하다.',
+      '고소작업차를 사용하는 작업자는 고소작업차 설치, 통제 및 비상 탈출에 대해 숙지하고 있다.',
+      '기타:'
+    ];
+    var aerialYN=[]; aerial.forEach(()=>{ aerialYN.push({y:ck(),n:ck(),txt:iv()}); });
+
+    // 비계 관련
+    var scaffold_na=ck();
+    var scTypes=['시스템 비계 (설계가 규격화되어 있으며 일반적인 구조)','이동식 비계 (이동가능한 비계)','강관 비계(강관의 길이 및 클램프 종류, 비계 구조 다양함)','복잡한 구조의 비계 (캔틸레버, 걸침비계 등 복잡한 구조)'];
+    var scTypeYN=[]; scTypes.forEach(()=>{scTypeYN.push({y:ck(),n:ck()});});
+    var scActs=[
+      '비계는 자격증이 있는 작업자가 설치하고 해체한다 (작업발판 높이 4m 이상인 경우 의무사항)',
+      '비계 설치 계획을 작성한다.',
+      '비계 설치 및 해체 시 낙하 사고 예방을 위해 주변에 바리케이트를 설치한다.',
+      '비계 절차는 안전한 비계 접근 상황을 확인하기 위해 사용된다.',
+      '비계 설치 및 해체 작업자의 안전을 위해 아래 사항을 적용한다.'
+    ];
+    var scActYN=[]; scActs.forEach(()=>{scActYN.push({y:ck(),n:ck()});});
+
+    // 안전 난간
+    var rail_na=ck();
+    var railTypes=['발판 가장자리 주위 또는 지붕 가장자리에 고정형 안전난간(핸드레일/가드레일)','개구부 주위 이동형 안전난간 설치','개구부에 개폐형 덮개 설치 (사람이 올라가거나 사물 적재 시)'];
+    var railTypeYN=[]; railTypes.forEach(()=>{railTypeYN.push({y:ck(),n:ck()});});
+    var railActs=[
+      '개폐형 덮개를 고정시키고 개구부 주의 안내를 위해 별도 조치 필요',
+      '추락 위험이 없는 안전한 장소에서 안전난간을 설치하기 위해 별도 조치 필요',
+      '안전난간 설치의 특성상 반드시 자격증을 소지한 비계 기능사가 임시 안전난간을 설치해야한다.'
+    ];
+    var railActYN=[]; railActs.forEach(()=>{railActYN.push({y:ck(),n:ck(),txt:iv()});});
+
+    // 추락방지
+    var fall_na=ck();
+    var fallTypes=['추락 억제 시스템 - (그네식 안전대 사용, 적절한 고정/부착 설비, 작업자 지면 접촉 방지를 위한 죔줄)','추락 저지 시스템 – (하네스, 로프, 충격흡수 장치, 앵커 사용)'];
+    var fallYN=[]; fallTypes.forEach(()=>{fallYN.push({y:ck(),n:ck()});});
+
+    // 낙하물
+    var dropItems=['접근 통제를 위한 임시 네트 설치','고소작업을 위한 자동죔줄(안전블록)','낙하물 방지망','지붕이나 설비의 날카로운 가장자리를 덮는 커버','머리 보호대','통제 구역 접근 허가/승인','경고 사인/바리케이트 필요','특정 조명 필요','기타:'];
+    var dropYN=[]; dropItems.forEach(()=>{dropYN.push({y:ck(),n:ck(),txt:iv()});});
+
+    inner = `
+      <div class="ex-permitno"><div class="ex-permitno-box"><div class="ex-permitno-label">작업허가 번호</div><div class="ex-permitno-val"></div></div></div>
+
+      <div class="ex-sec">Section 1 – 고소작업 / 접근 방법</div>
+      <table class="ex-tbl">
+        <tr><th style="width:120px;">작업명<br><span style="font-weight:400;font-size:10px;">(작업 위험성 평가에 따름)</span></th><td colspan="3">${s1w}</td></tr>
+        <tr><th>작업 유형<br><span style="font-weight:400;font-size:10px;">(접근 사유)</span></th><td colspan="3">${s1t}</td></tr>
+        <tr><th>작업 장소/위치</th><td colspan="3">${s1loc}</td></tr>
+        <tr><th>접근 방법/ 고소 작업</th><td colspan="3">${s1acc}</td></tr>
+      </table>
+
+      <div class="ex-sec" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Section 2 – 고소작업 및 접근 허가 관련 요구사항</span>
+      </div>
+      <div style="font-size:11px;padding:2px 4px;margin-bottom:2px;">필요한 조치 사항에 표시할 것</div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#dce6f1;padding:5px 8px;border:1px solid #aaa;font-weight:700;font-size:12px;">
+        고소작업차 관련 요구사항
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;">${roChkBox(s2na)} 아니오 (해당사항 없음)</label>
+      </div>
+      <table class="ex-tbl">
+        <thead><tr><th>고소작업차 관련 조치</th><th class="center">예</th><th class="center">아니오</th><th>'예'에 표시한 경우, 상세 조치 내용</th></tr></thead>
+        <tbody>
+          ${aerialYN.map((r,i)=>`<tr><td style="font-size:11px;">${aerial[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td><td style="font-size:11px;">${r.txt}</td></tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#dce6f1;padding:5px 8px;border:1px solid #aaa;border-top:none;font-weight:700;font-size:12px;">
+        비계 관련 요구사항
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;">${roChkBox(scaffold_na)} 아니오 (해당사항 없음)</label>
+      </div>
+      <table class="ex-tbl">
+        <thead><tr><th>비계 종류</th><th class="center">예</th><th class="center">아니오</th></tr></thead>
+        <tbody>
+          ${scTypeYN.map((r,i)=>`<tr><td style="font-size:11px;">${scTypes[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <table class="ex-tbl" style="margin-top:0;">
+        <thead><tr><th>비계 관련 조치</th><th class="center">예</th><th class="center">아니오</th></tr></thead>
+        <tbody>
+          ${scActYN.map((r,i)=>`<tr><td style="font-size:11px;">${scActs[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td></tr>`).join('')}
+        </tbody>
+      </table>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#dce6f1;padding:5px 8px;border:1px solid #aaa;border-top:none;font-weight:700;font-size:12px;margin-top:8px;">
+        안전 난간 및 덮개 관련 사항
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;">${roChkBox(rail_na)} 아니오 (해당사항 없음)</label>
+      </div>
+      <table class="ex-tbl">
+        <thead><tr><th>안전난간/덮개의 종류</th><th class="center">예</th><th class="center">아니오</th></tr></thead>
+        <tbody>${railTypes.map((t,i)=>`<tr><td style="font-size:11px;">${t}</td><td class="center">${roChkBox(railTypeYN[i].y)}</td><td class="center">${roChkBox(railTypeYN[i].n)}</td></tr>`).join('')}</tbody>
+      </table>
+      <table class="ex-tbl" style="margin-top:0;">
+        <thead><tr><th>가장자리 관련 또는 덮개 관련 조치</th><th class="center">예</th><th class="center">아니오</th><th>'예'에 표시한 경우, 상세 조치 내용</th></tr></thead>
+        <tbody>${railActYN.map((r,i)=>`<tr><td style="font-size:11px;">${railActs[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td><td style="font-size:11px;">${r.txt}</td></tr>`).join('')}</tbody>
+      </table>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;background:#dce6f1;padding:5px 8px;border:1px solid #aaa;border-top:none;font-weight:700;font-size:12px;margin-top:8px;">
+        추락방지 장비
+        <label style="display:flex;align-items:center;gap:4px;font-size:11px;">${roChkBox(fall_na)} 아니오 (해당사항 없음)</label>
+      </div>
+      <table class="ex-tbl">
+        <thead><tr><th>사용 예정인 추락방지 장비</th><th class="center">예</th><th class="center">아니오</th></tr></thead>
+        <tbody>${fallYN.map((r,i)=>`<tr><td style="font-size:11px;">${fallTypes[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td></tr>`).join('')}</tbody>
+      </table>
+
+      <div class="ex-sec" style="margin-top:8px;">낙하물 및 기타 예방조치</div>
+      <table class="ex-tbl">
+        <thead><tr><th>기타 필요 물품</th><th class="center">예</th><th class="center">아니오</th><th>상세 조치 내용</th></tr></thead>
+        <tbody>${dropYN.map((r,i)=>`<tr><td style="font-size:11px;">${dropItems[i]}</td><td class="center">${roChkBox(r.y)}</td><td class="center">${roChkBox(r.n)}</td><td style="font-size:11px;">${r.txt}</td></tr>`).join('')}</tbody>
+      </table>`;
+
+  } else if (fm.type === 'electric') {
+    // ── 전기 유지보수 작업 양식 ── 원본 PDF 완전 재현
+    var s1w=iv(), s2loc=iv();
+
+    var mandChecks=[
+      '반드시 최신 설계도를 참고 해야함 (작업 개시 전)',
+      '자격증이 있는 전기 기술자만 작업 수행',
+      '설비/장비 책임자에게 반드시 알려야 함 (관련 매니저, 수석 엔지니어 등)',
+      '격리 지점에 필요한 표지 부착 (비상시 구조 목적)',
+      '구조 키트는 점검 후 가까운 위치에 배치(격리 지점 또는 작업 구역 인근)',
+      '점검 완료한 절연 테스트 도구 및 장비만 사용',
+      '모든 작업자가 금속 물질 제거해야만 함 (귀금속, 벨트 버클, 시계, 펜 등)',
+      '승인된 안전 관리자: 전기가 차단되지 않은 상태에서 작업을 하는 경우 입회해야 함 / 작업의 성격, 위험요인, 작업 격리 지점에 관해 설명해야 함 / 작업이 진행되는 동안 상시 대기해야 함 / 어떤 전기 작업이 진행되는지 관찰하고, 위험 요소 발견 시 경고하며 비상시 도움을 주고 작업 구역 접근 통제 등의 역할을 반드시 이해해야 함',
+      '안전보호구 필수 착용 구역에 들어갈 경우 작업자 및 안전 관리자는 반드시 방염복을 입어야 함(다른 보호 장비에도 금속이 포함되어서는 안됨)',
+      '전기 절연 장갑의 손상 유무 및 시험 전압 확인 (전류가 흐르는 고압에도 절연되는 장갑)',
+      '개인 안전 장구 필수 착용 구역에 머물 경우 작업자 및 안전 관리자는 자외선 차단 기능이 있는 안면보호대를 반드시 사용',
+      '작업 구역 접근 방지를 위해 바리케이드 반드시 설치'
+    ];
+    var mandCK=[]; mandChecks.forEach(()=>{mandCK.push(ck());});
+
+    var addActs=[
+      ['전도성이 있는 표면 또는 전기가 흐르는 부분에 인접한 곳에 위치해 있을 때 작업이 진행되므로:', ['절연 고무 매트의 손상 유무 및 시험전압 확인 후 바닥 표면에 설치 해야함','전기가 흐르는 부분에 절연 바리케이드는 또는 접지된 쉴드를 설치 해야함']],
+      ['좁은 공간에서의 작업이므로:', ['적절한 자세를 취하여 기침, 재채기 등으로 인해 전기가 흐르는 부분에 접촉하지 않도록 한다.','전기가 흐르는 부분에 절연 바리케이드는 또는 접지된 쉴드를 설치 해야함']],
+      ['대체 전기 공급원이 있으므로:', ['대체 전기 공급원은 격리되어야 하며 \'격리 지점\' 표지판이 대체 전기 공급 격리 지점에 부착되어야 하며 또는 전기가 흐르는 부분에 절연 바리케이드가 설치되어야 함']],
+      ['콘덴서는 전류 방출이 필요하므로:', ['적절한 방출 장비를 사용']]
+    ];
+    var addYN=[]; addActs.forEach(()=>{addYN.push({y:ck(),n:ck(),txt:iv()});});
+
+    var confName=iv(), confDate=iv(), confTime=iv();
+
+    inner = `
+      <div class="ex-permitno"><div class="ex-permitno-box"><div class="ex-permitno-label">작업허가 번호</div><div class="ex-permitno-val"></div></div></div>
+
+      <div class="ex-sec">Section 1 – 일반 사항</div>
+      <table class="ex-tbl">
+        <tr><th style="width:100px;">작업명<br><span style="font-weight:400;font-size:10px;">(작업 위험성 평가에 따름)</span></th><td>${s1w}</td></tr>
+      </table>
+
+      <div class="ex-sec">Section 2 – 전원이 켜진 장비의 유지 보수 관련 조치</div>
+      <table class="ex-tbl">
+        <tr><th style="width:100px;">위치<br><span style="font-weight:400;font-size:10px;">(전원이 켜진 장비에 대한 정비 작업필요)</span></th>
+          <td style="width:40%">${s2loc}</td>
+          <th style="width:100px;">전원이 켜진 장비의 유지 보수 작업</th>
+          <td style="font-size:11px;">일부 또는 전체 장비의 전원이 켜진 상태에서 정비, 보수, 변경, 전기 장비 제거 또는 교체의 경우. (격리를 실행하거나 위험 평가 절차를 통한 전원 차단 여부를 확인하는 테스트의 경우 제외).</td>
+        </tr>
+      </table>
+
+      <table class="ex-tbl" style="margin-top:4px;">
+        <tr>
+          <th style="width:140px;background:#fff0e0;color:#c00;border:1px solid #aaa;vertical-align:top;">반드시 필요한<br>조치에 대한<br>확인(계획/완료)</th>
+          <td style="padding:4px 8px;">
+            ${mandChecks.map((t,i)=>`<div class="ex-chkrow">${roChkBox(mandCK[i])} <span>${t}</span></div>`).join('')}
+          </td>
+        </tr>
+        <tr>
+          <th style="background:#f5f5f5;">추가 조치<br><span style="font-weight:400;font-size:10px;">(작업의 성격에 따름)</span></th>
+          <td style="padding:0;">
+            <table style="width:100%;border-collapse:collapse;font-size:11px;">
+              <thead><tr><th style="border:1px solid #aaa;padding:4px;background:#dce6f1;">조치 내용</th><th style="border:1px solid #aaa;padding:4px;background:#dce6f1;width:30px;text-align:center;">예</th><th style="border:1px solid #aaa;padding:4px;background:#dce6f1;width:40px;text-align:center;">아니오</th><th style="border:1px solid #aaa;padding:4px;background:#dce6f1;">조치</th></tr></thead>
+              <tbody>
+                ${addYN.map((r,i)=>`<tr>
+                  <td style="border:1px solid #aaa;padding:4px;">
+                    <div style="font-weight:700;margin-bottom:2px;">${addActs[i][0]}</div>
+                    ${addActs[i][1].map(s=>`<div style="padding-left:10px;margin-top:2px;">• ${s}</div>`).join('')}
+                  </td>
+                  <td style="border:1px solid #aaa;padding:4px;text-align:center;">${roChkBox(r.y)}</td>
+                  <td style="border:1px solid #aaa;padding:4px;text-align:center;">${roChkBox(r.n)}</td>
+                  <td style="border:1px solid #aaa;padding:4px;">${r.txt}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <div style="border:1px solid #aaa;padding:6px 10px;margin-top:6px;font-size:11.5px;background:#fafafa;">
+        <div style="font-weight:700;margin-bottom:4px;">전기 계획 확인:</div>
+        <div style="font-size:11px;margin-bottom:6px;">전기 담당 책임자가 전류가 흐르는 전기 장비의 정비 작업에 대한 심도 깊은 검토를 이행하였으며 이는 전원을 차단하고 작업 수행을 할 수 없으며 본 조치 양식 및 관련 위험 평가서에 단계별 작업에 대한 설명 및 특정 조치 요구 사항 등에 관해 기술하고 있음을 확인 하기 위한 것이었음.</div>
+        <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+          <thead><tr><th style="background:#dce6f1;border:1px solid #aaa;padding:5px;">확인</th><th style="background:#dce6f1;border:1px solid #aaa;padding:5px;">이름</th><th style="background:#dce6f1;border:1px solid #aaa;padding:5px;">서명</th><th style="background:#dce6f1;border:1px solid #aaa;padding:5px;">날짜</th><th style="background:#dce6f1;border:1px solid #aaa;padding:5px;">시각</th></tr></thead>
+          <tbody><tr>
+            <td style="border:1px solid #aaa;padding:5px;">전기 계획 완료:<br><span style="font-size:10px;">(전기 담당 책임자)</span></td>
+            <td style="border:1px solid #aaa;padding:5px;">${confName}</td>
+            <td style="border:1px solid #aaa;padding:5px;min-width:100px;">&nbsp;</td>
+            <td style="border:1px solid #aaa;padding:5px;">${confDate}</td>
+            <td style="border:1px solid #aaa;padding:5px;">${confTime}</td>
+          </tr></tbody>
+        </table>
+      </div>`;
+
+  } else if (fm.type === 'lifting') {
+    // ── 기계적 인양 작업 양식 (3페이지) ── 원본 PDF 완전 재현
+    var licY=ck(), licN=ck(), permY=ck(), permN=ck();
+    var s1w=iv(), s1loc=iv(), s1type=iv(), s1cspec=iv(), s1creg=iv(), s1cap=iv(), s1rad=iv();
+    var s1sdate=iv(), s1stime=iv(), s1edate=iv(), s1etime=iv();
+
+    // Section 2
+    var hazY=ck(),hazN=ck(), isoY=ck(),isoN=ck(), emergY=ck(),emergN=ck();
+    var supName=iv(), supDate=iv();
+    // Section 3
+    var s3name1=iv(), s3date1=iv();
+    var s3name2=iv(), s3date2=iv();
+    // Section 4
+    var s4done=ck(), s4stop=ck(), s4chkY=ck(), s4chkN=ck(), s4eqY=ck(), s4eqN=ck();
+    var s4note=iv(), s4name=iv(), s4date=iv(), s4time=iv();
+
+    // Section 5 체크리스트 (6개 카테고리)
+    var chk5_1 = [
+      '위험성 평가를 수행하였는가?',
+      '화물이 전원이 켜져있는 설비나 전선, 가스 배관위로 인양되고 있는가?',
+      '작업자는 장비에 익숙한가?',
+      '작업자는 작업 수행 경험이 풍부한가?',
+      '작업이 여러 개의 순차적 단계로 되어 있는가?',
+      '인양될 화물이 20톤을 초과하는가?',
+      '크레인 조립, 해체 또는 구조변경 관련 작업인가?',
+      '거의 수직으로 (3도) 들어올리기 위해 천장크레인/모노레일을 사용하고 있는가?',
+      '매설된 전선이나 수도관을 확인하였는가?',
+      '크레인기사에게 알려야 할 사항이 있는가?',
+      '화물 용접 필요 시 화물과 크레인 사이에 절연체를 사용하였는가?',
+      '화물의 권상지점과 인양 방법을 파악하였는가?',
+      '인양 작업 지역의 전선에 대하여 확인하고 격리를 실시하거나 관련 규정에 따라 이격거리를 두었는가?',
+      '화물 인양 크레인의 이동 경로가 제대로 파악되었는가?',
+      '진입경로를 확보하고 장애물이 없는지 확인하였는가?',
+      '크레인 기사의 보행로가 확보되어 있는가?',
+      '상부공간(헤드룸)이 충분한가?',
+      '붐을 작동하기에 충분한 고도가 확보되었는가?',
+      '화물이 잘 묶여 있는지 확인하였는가?',
+      '줄걸이 용구를 안전하게 제거할 수 있는가?',
+      '화물 권하 지점과 줄걸이 용구 분리 지점이 정해져 있는가?',
+      '악천후가 예상되는가?',
+      '작업 가능 최대풍속이 정해져 있는가? 최대풍속 측정이 가능한가?'
+    ];
+    var c51=[]; chk5_1.forEach(()=>{c51.push({y:ck(),n:ck()});});
+
+    var chk5_2=['화물 및 후크 등 줄걸이 용구의 무게에 대하여 작업자가 잘 알고 있는가?','크레인 로드차트(인양능력표)가 있는가? 전체 인양 무게를 알고 있는가? 인양되어야 할 모든 항목들을 파악하고 있는가(붐헤드 포함 또는 미포함)?','화물 형태가 일반적인가, 또는 특이한가?','느슨하게 체결된 줄걸이 용구는 없는가?'];
+    var c52=[]; chk5_2.forEach(()=>{c52.push({y:ck(),n:ck()});});
+
+    var chk5_3=['인양고리를 사용하는가? 적합하게 디자인 된 고리인가? 안전작업하중이 표시되어 있는가?','슬링, 샤클 등의 안전하중 또는 하중제한을 확인하였는가?','슬링의 각도나 매듭 방법은 처리하는 화물의 무게에 알맞게 되어 있는가?','인양장치의 하자나 손상 여부를 확인하였는가?','뾰족한 단면에 의해 슬링이 손상될 위험이 없는가?'];
+    var c53=[]; chk5_3.forEach(()=>{c53.push({y:ck(),n:ck()});});
+
+    var chk5_4=['사용전 사용후 점검을 실시하였는가?','운전석의 에어컨을 포함하여 크레인의 모든 안전장치가 제대로 작동되고 있는가?','지면의 상태 또는 구조가 적합하다고 판단되는가?','매트 위에 아웃트리거를 완전히 설치했는가?','작업 반경 및 크레인 구조에 기초한 로드차트(인양능력표)에 나와있는 크레인 인양 능력 범위 내에서 작업이 이루어지는가?'];
+    var c54=[]; chk5_4.forEach(()=>{c54.push({y:ck(),n:ck()});});
+
+    var chk5_5=['사람과 관련된 인양작업을 한다거나 사람의 머리위로 화물을 인양하는 경우, 위험성평가를 실시하거나 줄걸이 작업 계획서를 작성하였는가?','본 인양작업에 대한 절차서가 있다면, 해당 절차서를 준수하고 있는가?','인양작업 지침 및 규정에 대해 충분한 지도를 하였는가?','인양작업 지역은 가동중인 설비, 배관, 전선 등에서 떨어져 있는가?','인양작업 반경은 줄자 또는 공학도구로 정확하게 측정되었는가?','충분한 상부공간(헤드룸)을 두고 인양작업을 실시하는가?','바리케이트나, 접근금지테이프를 이용해 인양작업 구역을 격리했는가? 또는 감사자','고소 작업을 실시하는 경우, 위험성평가를 실시했는가? 고소작업자는 적합한 개인보호장구를 갖추고 있는가?','인양작업을 수행하기에 안전한가? (예를 들어, 강풍, 태풍과 같은 악천후 상황)','인양된 화물이 크레인의 몸체나 붐, 장애물에 부딪힐 가능성이 있는가? 줄걸이 작업 계획서를 검토하였는가?'];
+    var c55=[]; chk5_5.forEach(()=>{c55.push({y:ck(),n:ck()});});
+
+    var chk5_6=['인양화물이 일반적인 줄걸이 용구로 취급하는 인양화물보다 무겁거나 복잡한 경우, 이 사실을 감독자가 알고 있는가?','인양 작업에 쓰이는 줄걸이 용구는 법적 적합성 검사를 받았는가? 현장 관리자는 그 적합성을 평가 하였는가?','크레인 기사 및 신호수가 본 작업을 수행할 역량이 있는지를 보여주는 자격증을 갖추고 있는가?','인양화물을 통제하는 사람이 누구인지 확인하였는가? 식별이 용이한 조끼(밤에도 잘 보이는)을 착용하였는가?','기타 부대 장비를 갖추고 있는가? (붐리프트, 시저리프트, 포크리프트) 작업자가 충분한 역량을 가지고 있는가?'];
+    var c56=[]; chk5_6.forEach(()=>{c56.push({y:ck(),n:ck()});});
+
+    function chkTbl(title, items, data){
+      return `<div class="ex-sec green" style="margin-top:6px;">${title}</div>
+      <table class="ex-tbl">
+        <thead><tr><th></th><th class="center">예</th><th class="center">아니오</th></tr></thead>
+        <tbody>${items.map((t,i)=>`<tr><td style="font-size:11px;">${t}</td><td class="center">${roChkBox(data[i].y)}</td><td class="center">${roChkBox(data[i].n)}</td></tr>`).join('')}</tbody>
+      </table>`;
     }
-    if(sec.checks){
-      html += '<div class="checklist">';
-      sec.checks.forEach(function(item){
-        var checked = pageData.checks.includes(checkIdx);
-        checkIdx++;
-        html += '<label class="ro"><input type="checkbox"'+(checked?' checked':'')+'  disabled> <span style="font-size:12px;">'+item+'</span></label>';
-      });
-      html += '</div>';
-    }
-    return html;
-  }).join('');
+
+    inner = `
+      <div class="ex-notice">
+        20톤 이상 인양작업 또는 두 개 이상의 크레인 사용시 반드시 허가를 받아야 한다. 작업 전에 반드시 <strong>위험성평가/또는 작업안전분석</strong>을 수행, 위험요인을 찾아내어 조치를 취하여야 한다. 두 개 이상의 크레인을 사용할 경우, 역량을 갖춘 자가 "인양방법"을 검토한 후 본 허가서에 검토결과를 첨부한다.
+      </div>
+      <table class="ex-tbl" style="margin-bottom:8px;">
+        <tr><td style="font-size:11.5px;">인양 작업 수행자는 면허증을 소지하고 있으며 훈련을 받아 필요한 역량을 갖추고 있는가?</td><td style="width:60px;text-align:center;">${roChkBox(licY)} 예</td><td style="width:60px;text-align:center;">${roChkBox(licN)} 아니오</td></tr>
+        <tr><td style="font-size:11.5px;">해당 작업에 대한 허가서를 발급받았는가?</td><td style="text-align:center;">${roChkBox(permY)} 예</td><td style="text-align:center;">${roChkBox(permN)} 아니오</td></tr>
+      </table>
+
+      <div class="ex-permitno"><div class="ex-permitno-box"><div class="ex-permitno-label">작업허가 번호</div><div class="ex-permitno-val"></div></div></div>
+
+      <div class="ex-sec">SECTION 1 – 일반사항</div>
+      <table class="ex-tbl">
+        <tr><th style="width:100px;">작업명</th><td colspan="5">${s1w}</td></tr>
+        <tr><th>작업 장소</th><td colspan="5">${s1loc}</td></tr>
+        <tr><th>작업 목적/유형</th><td colspan="5">${s1type}</td></tr>
+        <tr><th>크레인 규격</th><td>규격: ${s1cspec}</td><th style="width:80px;">크레인 등록 번호</th><td>${s1creg}</td><th style="width:60px;">권상하중</th><td>${s1cap} / 작업 반경: ${s1rad}</td></tr>
+        <tr><th>작업 기간</th><td colspan="5" style="font-size:11px;">시작 일시: ${s1sdate} ${s1stime}&nbsp;&nbsp;&nbsp;종료 일시: ${s1edate} ${s1etime}</td></tr>
+      </table>
+
+      <div class="ex-sec">SECTION 2 – 관리 방안</div>
+      <div style="border:1px solid #aaa;padding:6px 10px;margin-bottom:4px;">
+        ${[['작업장에 위험요소가 없는가?',hazY,hazN],['추가 격리가 필요한가?',isoY,isoN],['비상 대응 방안이 필요한가?',emergY,emergN]].map(q=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #eee;font-size:11.5px;">
+            <span>${q[0]}</span>
+            <span style="display:flex;gap:16px;">
+              <label style="display:flex;gap:3px;align-items:center;">${roChkBox(q[1])} 예</label>
+              <label style="display:flex;gap:3px;align-items:center;">${roChkBox(q[2])} 아니오</label>
+            </span>
+          </div>`).join('')}
+        <div style="margin-top:6px;font-size:11.5px;"><strong>작업업체 관리감독자 위험 수용:</strong><br>
+          본인은 20톤 이상의 인양작업을 허가한다. 본인은 이 작업을 수행하는데 있어 보다 안전한 대체 방법이 없음을 위험성평가 또는 작업안전분석을 통해 입증했다고 인정한다. 인양작업은 위험성평가를 통해서 확인된 작업에 한한다.</div>
+        <div style="display:flex;gap:16px;margin-top:6px;font-size:11.5px;"><strong>이름:</strong> ${supName}&nbsp;&nbsp;<strong>서명:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>날짜:</strong> ${supDate}</div>
+      </div>
+
+      <div class="ex-sec">SECTION 3 – 작업 허가</div>
+      <div style="border:1px solid #aaa;padding:6px 10px;margin-bottom:4px;font-size:11.5px;">
+        <div>본 허가서를 인정하며 상기 명시된 조건 및 관련 절차를 준수할 것에 동의하고, 작업의 직접적인 담당자로서 책임을 수락한다. 아울러, 본인은 첨부된 위험성평가/작업안전분석, 절차서 그리고 구조방안을 숙지하였고 위험요인에 대한 개선 조치가 취해졌음을 확인하였다.</div>
+        <div style="display:flex;gap:16px;margin-top:6px;"><strong>이름:</strong> ${s3name1}&nbsp;&nbsp;<strong>서명:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>날짜:</strong> ${s3date1}</div>
+        <div style="margin-top:8px;">본인은 본 허가서에 나와있는 위험성평가/작업분석상의 작업조건과 주의 사항에 준하여 20톤 이상의 화물 인양 작업을 허가한다.<br><span style="font-size:10.5px;">주의: 본 허가서에 위험성평가/작업안전분석서를 반드시 첨부할 것.</span></div>
+        <div style="display:flex;gap:16px;margin-top:6px;"><strong>이름:</strong> ${s3name2}&nbsp;&nbsp;<strong>서명:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>날짜:</strong> ${s3date2}</div>
+      </div>
+
+      <div class="ex-sec">SECTION 4 – 작업의 완료, 중단 또는 취소 (작업업체 관리감독자)</div>
+      <div style="border:1px solid #aaa;padding:6px 10px;margin-bottom:4px;font-size:11.5px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span>인양허가와 관련된 모든 작업의 상태:</span>
+          <span>${roChkBox(s4done)} 완료&nbsp;&nbsp;${roChkBox(s4stop)} 중단</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;"><span>작업 완료 후 작업장과 그 인접한 구역을 점검하였으며 모든 위험요소에 대해 조치하였는가?</span><span>${roChkBox(s4chkY)} 예&nbsp;${roChkBox(s4chkN)} 아니오</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;"><span>장비 점검 후 반납하였는가?</span><span>${roChkBox(s4eqY)} 예&nbsp;${roChkBox(s4eqN)} 아니오</span></div>
+        <div>비고: ${s4note}</div>
+        <div style="display:flex;gap:16px;margin-top:6px;"><strong>이름:</strong> ${s4name}&nbsp;&nbsp;<strong>서명:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>날짜:</strong> ${s4date}&nbsp;&nbsp;<strong>시간:</strong> ${s4time}</div>
+      </div>
+
+      ${chkTbl('SECTION 5 – 체크리스트 / 1. 일반', chk5_1, c51)}
+      ${chkTbl('2. 화물', chk5_2, c52)}
+      ${chkTbl('3. 인양장비', chk5_3, c53)}
+      ${chkTbl('4. 크레인', chk5_4, c54)}
+      ${chkTbl('5. 인양', chk5_5, c55)}
+      ${chkTbl('6. 작업자', chk5_6, c56)}`;
+  }
+
+  var titles = {hotwork:'화기작업 양식', height:'고소작업 양식', electric:'전기 유지보수 작업 양식(전원이 켜진 장비)', lifting:'기계적 인양 작업 양식'};
 
   return `<div class="card">
     <div class="card-header extra">
-      <span>📋 ${labels[fm.type]||fm.type}</span>
+      <span>📋 ${titles[fm.type]||fm.type}</span>
       <span class="badge">외주작업자 작성완료</span>
     </div>
-    <div class="card-body">
-      ${sectionsHtml}
+    <div class="card-body ex-wrap">
+      <div class="ex-title-bar">
+        <div class="ex-badge">작업허가서</div>
+        <div class="ex-title">${titles[fm.type]||fm.type}</div>
+      </div>
+      ${inner}
     </div>
   </div>`;
 }
@@ -734,67 +1175,97 @@ async function doSign() {
 }
 
 async function generatePDF() {
-  // html2canvas + jsPDF로 전체 서류 캡처
   var jsPDF = window.jspdf.jsPDF;
   var pdf = new jsPDF({orientation:'p', unit:'mm', format:'a4'});
   var cards = Array.from(document.querySelectorAll('#formWrap .card'));
   if (!cards.length) throw new Error('서류 없음');
 
-  var proj = document.getElementById('IP').textContent || '안전서류';
-  var now = new Date();
-  var p2 = n=>String(n).padStart(2,'0');
-  var fileName = '안전서류_'+now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+'_'+p2(now.getHours())+p2(now.getMinutes())+'.pdf';
+  var now2 = new Date();
+  var p2b = n=>String(n).padStart(2,'0');
+  var fileName = '안전서류_'+now2.getFullYear()+p2b(now2.getMonth()+1)+p2b(now2.getDate())+'_'+p2b(now2.getHours())+p2b(now2.getMinutes())+'.pdf';
+
+  var A4W = 210, A4H = 297, margin = 5;
+  var printW = A4W - margin*2;  // 200mm
+  var pxPerMm = 3.78; // 96dpi → mm
+  var captureWidth = Math.round(printW * pxPerMm * 2); // 고해상도
 
   for (var i=0; i<cards.length; i++) {
     var card = cards[i];
-    // 원래 스타일 저장 후 캡처용으로 설정
     var origStyle = card.getAttribute('style')||'';
-    card.style.cssText = 'width:794px!important;max-width:794px!important;border-radius:0!important;margin:0!important;box-shadow:none!important;background:white!important;';
 
-    await new Promise(r=>setTimeout(r,50));
+    // 캡처용 스타일
+    card.style.cssText = `width:${captureWidth/2}px!important;max-width:${captureWidth/2}px!important;
+      border-radius:0!important;margin:0!important;box-shadow:none!important;
+      background:white!important;overflow:visible!important;`;
+
+    await new Promise(r=>setTimeout(r,80));
 
     var canvas = await html2canvas(card, {
-      scale:2, useCORS:true, allowTaint:true, logging:false,
-      backgroundColor:'#ffffff', width:794,
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      width: captureWidth/2,
+      windowWidth: captureWidth/2,
       onclone: function(doc) {
-        // input→span 교체
+        // input → span
         doc.querySelectorAll('input[type="text"],input[type="date"],input[type="time"]').forEach(function(inp){
           var s=doc.createElement('span');
           s.textContent=inp.value||'';
-          s.style.cssText='font-size:12px;display:inline-block;width:100%;word-break:break-all;';
+          s.style.cssText='font-size:11.5px;display:inline-block;width:100%;word-break:break-all;font-family:inherit;';
           inp.parentNode.replaceChild(s,inp);
         });
         doc.querySelectorAll('textarea').forEach(function(ta){
           var s=doc.createElement('span');
           s.textContent=ta.value||'';
-          s.style.cssText='font-size:12px;display:block;width:100%;white-space:pre-wrap;';
+          s.style.cssText='font-size:11.5px;display:block;width:100%;white-space:pre-wrap;font-family:inherit;';
           ta.parentNode.replaceChild(s,ta);
         });
         doc.querySelectorAll('input[type="checkbox"]').forEach(function(cb){
           var s=doc.createElement('span');
           s.textContent=cb.checked?'☑':'☐';
-          s.style.fontSize='13px';
+          s.style.cssText='font-size:13px;line-height:1;';
           cb.parentNode.replaceChild(s,cb);
         });
         doc.querySelectorAll('*').forEach(function(el){
           el.style.overflow='visible';
         });
-        // 버튼류 숨기기
-        doc.querySelectorAll('.sig-clear,.sighint,.btn-submit,.submit-area,.header,.step-bar,.info-bar').forEach(function(el){el.remove();});
+        // UI 요소 제거
+        doc.querySelectorAll('.sig-clear,.sighint,.btn-submit,.submit-area,.header,.step-bar,.info-bar,.card-header .badge.editable').forEach(function(el){el.style.display='none';});
       }
     });
 
     card.setAttribute('style', origStyle);
 
-    var imgData = canvas.toDataURL('image/jpeg', 0.92);
-    var pdfW = 210;
-    var pdfH = (canvas.height/canvas.width)*pdfW;
-    if (i>0) pdf.addPage();
-    if (pdfH<=297) {
-      pdf.addImage(imgData,'JPEG',0,0,pdfW,pdfH);
+    var imgData = canvas.toDataURL('image/jpeg', 0.95);
+    var imgH_mm = (canvas.height / canvas.width) * printW;
+
+    if (i > 0) pdf.addPage();
+
+    // 페이지 높이 초과 시 분할
+    if (imgH_mm <= A4H - margin*2) {
+      pdf.addImage(imgData, 'JPEG', margin, margin, printW, imgH_mm);
     } else {
-      var sc = 297/pdfH;
-      pdf.addImage(imgData,'JPEG',0,0,pdfW*sc,297);
+      // 긴 카드는 여러 페이지로 분할
+      var sliceH = Math.floor((A4H - margin*2) / imgH_mm * canvas.height);
+      var offset = 0;
+      var pageIdx = 0;
+      while (offset < canvas.height) {
+        var tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = Math.min(sliceH, canvas.height - offset);
+        var ctx = tempCanvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        ctx.drawImage(canvas, 0, offset, canvas.width, tempCanvas.height, 0, 0, canvas.width, tempCanvas.height);
+        var sliceData = tempCanvas.toDataURL('image/jpeg', 0.95);
+        var sliceH_mm = (tempCanvas.height / canvas.width) * printW;
+        if (pageIdx > 0 || i > 0) pdf.addPage();
+        pdf.addImage(sliceData, 'JPEG', margin, margin, printW, sliceH_mm);
+        offset += sliceH;
+        pageIdx++;
+      }
     }
   }
 
