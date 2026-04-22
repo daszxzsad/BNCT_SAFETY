@@ -31,7 +31,7 @@ module.exports = async function handler(req, res) {
     });
     if (error) throw error;
 
-    // 담당자에게 이메일 (Section 3 서명 요청)
+    // 담당자에게 이메일 (Section 3 서명 요청) + 박형진 CC
     const mgr = (managers || [])[0] || {};
     if (mgr.email) {
       const sigUrl = `${BASE_URL}/sign?token=${token}&role=s3`;
@@ -39,7 +39,7 @@ module.exports = async function handler(req, res) {
         service: 'gmail',
         auth: { user: process.env.GMAIL_USER, pass: process.env.GMAIL_APP_PASSWORD }
       });
-      await transporter.sendMail({
+      const mailOpts = {
         from: `"BNCT 안전서류 시스템" <${process.env.GMAIL_USER}>`,
         to: `"${mgr.name}" <${mgr.email}>`,
         subject: `[BNCT 전자결재] ${projectName} - ${companyName} Section 3 서명 요청`,
@@ -71,7 +71,11 @@ module.exports = async function handler(req, res) {
               <p style="font-size:11px;color:#aaa;margin-top:20px;text-align:center;">본 메일은 BNCT 자산관리팀 안전서류 시스템에서 자동 발송되었습니다.</p>
             </div>
           </div>`
-      });
+      };
+      // 박형진 CC 추가
+      const ccEmail = process.env.CC_EMAIL || '';
+      if (ccEmail) mailOpts.cc = ccEmail;
+      await transporter.sendMail(mailOpts);
     }
 
     return res.status(200).json({ success: true, token });
