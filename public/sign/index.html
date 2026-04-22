@@ -180,6 +180,17 @@ const ld=(show,msg='처리 중...')=>{document.getElementById('loadingEl').class
 const gv=id=>{const e=document.getElementById(id);return e?e.value:'';};
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const safeJSON=(s,def)=>{try{return JSON.parse(s||'');}catch{return def;}};
+
+// ── 섹션별 전체 선택 토글 ──
+function toggleAllSignChecks(containerId){
+  const el=document.getElementById(containerId);
+  if(!el)return;
+  const cbs=el.querySelectorAll('input[type="checkbox"]:not([disabled])');
+  const all=Array.from(cbs).every(cb=>cb.checked);
+  cbs.forEach(cb=>cb.checked=!all);
+  // 버튼 텍스트도 바꾸기
+  event?.target && (event.target.textContent = all?'전체 선택':'전체 해제');
+}
 async function init(){
   if(!TOKEN){document.getElementById('formWrap').innerHTML='<div class="alert alert-lock">⚠️ 유효하지 않은 링크입니다.</div>';return;}
   ld(true,'서류 불러오는 중...');
@@ -277,7 +288,10 @@ function buildPermit(f,p,mgr3,role,status,canEdit){
   const i4=['본인은, 위험성 평가를 비롯하여 필요한 관리 양식을 포함한 모든 관련 문서 내용을 검토하였다.','본인은 당 작업 허가서를 등록하고, 작업 번호를 부여하였으며, 관련된 모든 문서 상에 해당 작업 번호를 기입하였다.'];
   const s3Done=!!p.s3_signed_at,s4Done=!!p.s4_signed_at;
   const s5=safeJSON(p.s5_to_s10,{});
-  const s2C=safeJSON(f.s2_checks,[]),s3C=safeJSON(p.s3_checks,[]),s4C=safeJSON(p.s4_checks,[]);
+  const s2C=safeJSON(f.s2_checks,[]),s1C=safeJSON(f.s1_checks,[]),s3C=safeJSON(p.s3_checks,[]),s4C=safeJSON(p.s4_checks,[]);
+  console.log('[복원] form_fields 원본:', f);
+  console.log('[복원] s1_checks raw:', f.s1_checks, '→ s1C:', s1C);
+  console.log('[복원] s2_checks raw:', f.s2_checks, '→ s2C:', s2C);
   const canS3=role==='s3'&&status==='pending_s3';
   const canS4=role==='s4'&&status==='pending_s4';
   const canActive=role==='active'&&(status==='active'||status==='completed');
@@ -292,7 +306,7 @@ function buildPermit(f,p,mgr3,role,status,canEdit){
     <div class="si"><div class="si-lbl">시간</div><input id="${id}t" type="time" value="${esc(s5[id+'t']||'')}" ${!e?'readonly':''} style="${!e?'background:var(--gray1);':''}"></div>
   </div>`;
 
-  const p1=`<div class="card"><div class="card-hdr permit1"><span>📄 작업허가서 양식</span><span class="badge">Page 1 of 2</span></div><div class="card-body">
+  const p1=`<div class="card"><div class="card-hdr permit1"><span>📄 작업허가서 양식</span><span class="badge">Page 1 of 3</span></div><div class="card-body">
     <div style="display:flex;justify-content:flex-end;margin-bottom:10px;"><div style="border:1.5px solid #999;display:flex;font-size:12px;border-radius:3px;overflow:hidden;"><div style="background:#003087;color:#fff;padding:4px 12px;font-weight:700;font-size:11px;">작업허가 번호</div><div style="padding:4px 16px;">${esc(f.permitNo||'')}</div></div></div>
     <div style="border:1px solid #ccc;padding:7px 12px;font-size:12px;margin-bottom:10px;background:#fafafa;border-radius:3px;">본 양식은 상세 명시된 <strong>고위험군 작업</strong>에 대한 승인 및 전달 사항 등을 관리하기 위한 것이다.</div>
     <div class="sec-hdr navy">Section 1: 일반 사항 <span class="badge done-mark" style="font-size:10px;">외주작업자 작성완료</span></div>
@@ -305,7 +319,7 @@ function buildPermit(f,p,mgr3,role,status,canEdit){
     <div style="border:1px solid #ccc;padding:9px 12px;font-size:12px;margin-bottom:10px;border-radius:3px;">
       <div style="font-weight:700;margin-bottom:6px;">고위험군 작업 선택:</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px;">
-        ${['화기 작업','토공/굴착 작업','밀폐공간출입작업','설비/장비 격리','고소 작업','기계적 인양 작업','고압 스위치 접근 및 시험 작업 허가','전기 유지보수작업'].map(t=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;"><input type="checkbox" disabled style="width:13px;height:13px;"> ${t}</label>`).join('')}
+        ${['화기 작업','토공/굴착 작업','밀폐공간출입작업','설비/장비 격리','고소 작업','기계적 인양 작업','고압 스위치 접근 및 시험 작업 허가','전기 유지보수작업'].map((t,i)=>`<label style="display:flex;align-items:center;gap:5px;font-size:12px;"><input type="checkbox"${s1C.includes(i)?' checked':''} disabled style="width:13px;height:13px;"> ${t}</label>`).join('')}
       </div>
     </div>
     <div class="sec-hdr navy">Section 2: 승인 요청 (작업 업체 관리 감독자 작성) <span class="badge done-mark" style="font-size:10px;">외주작업자 작성완료</span></div>
@@ -318,9 +332,9 @@ function buildPermit(f,p,mgr3,role,status,canEdit){
       <div class="si"><div class="si-lbl">날짜</div><input type="date" value="${esc(f['s2-date']||'')}" readonly></div>
       <div class="si"><div class="si-lbl">시간</div><input type="time" value="${esc(f['s2-time']||'')}" readonly></div>
     </div>
-    <div class="sec-hdr blue" style="margin-top:14px;">Section 3: 작업업체 검토 (업무담당자 작성) ${cb(canS3,s3Done,'서명')}</div>
+    <div class="sec-hdr blue" style="margin-top:14px;">Section 3: 작업업체 검토 (업무담당자 작성) ${cb(canS3,s3Done,'서명')}${canS3?' <button onclick="toggleAllSignChecks(\'c3list\')" style="font-size:10px;padding:3px 10px;border:1px solid white;background:transparent;color:white;border-radius:4px;cursor:pointer;font-family:inherit;margin-left:6px;">전체 선택</button>':''}</div>
     ${!s3Done&&!canS3?'<div class="alert alert-warn">⏳ Section 3 서명 대기 중입니다.</div>':''}
-    <div class="checklist" style="margin-bottom:8px;">
+    <div class="checklist" id="c3list" style="margin-bottom:8px;">
       ${i3.map((t,i)=>canS3?`<label><input type="checkbox" id="c3-${i}" style="width:14px;height:14px;"> <span style="font-size:12px;">${t}</span></label>`:`<label class="ro"><input type="checkbox"${s3C.includes(i)?' checked':''} disabled style="width:14px;height:14px;"> <span style="font-size:12px;">${t}</span></label>`).join('')}
     </div>
     <div class="sigrow">
@@ -332,9 +346,12 @@ function buildPermit(f,p,mgr3,role,status,canEdit){
       <div class="si"><div class="si-lbl">날짜</div><input id="s3d" type="date" value="${esc(p.s3_date||TODAY)}" ${!canS3?'readonly':''} style="${!canS3?'background:var(--gray1);':''}"></div>
       <div class="si"><div class="si-lbl">시간</div><input id="s3t" type="time" value="${esc(p.s3_time||NOWT)}" ${!canS3?'readonly':''} style="${!canS3?'background:var(--gray1);':''}"></div>
     </div>
-    <div class="sec-hdr blue2" style="margin-top:14px;">Section 4: 승인 (작업허가 승인 담당자 작성) ${cb(canS4,s4Done,'서명')}</div>
+  </div></div>`;
+
+  const p1b=`<div class="card"><div class="card-hdr permit1"><span>📄 작업허가서 양식 · Section 4</span><span class="badge">Page 2 of 3</span></div><div class="card-body">
+    <div class="sec-hdr blue2">Section 4: 승인 (작업허가 승인 담당자 작성) ${cb(canS4,s4Done,'서명')}${canS4?' <button onclick="toggleAllSignChecks(\'c4list\')" style="font-size:10px;padding:3px 10px;border:1px solid white;background:transparent;color:white;border-radius:4px;cursor:pointer;font-family:inherit;margin-left:6px;">전체 선택</button>':''}</div>
     ${!s4Done&&!canS4?'<div class="alert alert-warn">⏳ Section 4 서명 대기 중입니다.</div>':''}
-    <div class="checklist" style="margin-bottom:8px;">
+    <div class="checklist" id="c4list" style="margin-bottom:8px;">
       ${i4.map((t,i)=>canS4?`<label><input type="checkbox" id="c4-${i}" style="width:14px;height:14px;"> <span style="font-size:12px;">${t}</span></label>`:`<label class="ro"><input type="checkbox"${s4C.includes(i)?' checked':''} disabled style="width:14px;height:14px;"> <span style="font-size:12px;">${t}</span></label>`).join('')}
     </div>
     <div class="sigrow">
@@ -346,7 +363,7 @@ function buildPermit(f,p,mgr3,role,status,canEdit){
       <div class="si"><div class="si-lbl">날짜</div><input id="s4d" type="date" value="${esc(p.s4_date||TODAY)}" ${!canS4?'readonly':''} style="${!canS4?'background:var(--gray1);':''}"></div>
       <div class="si"><div class="si-lbl">시간</div><input id="s4t" type="time" value="${esc(p.s4_time||NOWT)}" ${!canS4?'readonly':''} style="${!canS4?'background:var(--gray1);':''}"></div>
     </div>
-    <div style="border:1px solid #ccc;border-top:none;padding:8px 12px;font-size:12px;border-radius:0 0 4px 4px;">
+    <div style="border:1px solid #ccc;border-top:none;padding:8px 12px;font-size:12px;border-radius:0 0 4px 4px;margin-top:10px;">
       <strong>제한 사항:</strong> 본 작업 승인 사항은 아래 명시된 일시까지만 유효하다.
       <div style="display:flex;gap:12px;margin-top:5px;flex-wrap:wrap;">
         날짜: <input id="s4ld" type="date" value="${esc(p.s4_limit_date||'')}" ${!canS4&&!canActive?'readonly':''} style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:12px;font-family:inherit;">
@@ -356,7 +373,7 @@ function buildPermit(f,p,mgr3,role,status,canEdit){
   </div></div>`;
 
   const si5=['본인의 역할 및 업무, 작업 범위에 대해 숙지하여야 한다.','위험성 평가 및 관리 양식을 읽고, 설명을 들었으며, 이를 이해하고 있어야 한다.','각 조 작업을 시작할 때마다 현장 감독자에게 알려야 하며, 작업허가/출입 관련 지시 및 허가를 받아 작업을 시작하도록 한다.','교대 근무를 할 경우, 작업 시작 전/종료 후 서명한다. (Section 7 참고)','작업 하는 동안 새로운 위험요소가 발견되었다면, 즉시 해당 작업 업체/작업자들의 현장 감독자와 기타 작업과 연관된 당사자들에게 통보한다.'];
-  const p2=`<div class="card"><div class="card-hdr permit2"><span>📄 작업허가서 양식 (계속)</span><span class="badge">Page 2 of 2</span>${canActive?'<span class="badge edit">✏ 작성 가능</span>':''}</div><div class="card-body">
+  const p2=`<div class="card"><div class="card-hdr permit2"><span>📄 작업허가서 양식 (계속)</span><span class="badge">Page 3 of 3</span>${canActive?'<span class="badge edit">✏ 작성 가능</span>':''}</div><div class="card-body">
     <div class="sec-hdr blue">Section 5: 작업허가/작업구역 출입관련 지시 사항</div>
     <div style="font-size:12px;line-height:1.9;padding:4px 0 8px;">
       ${si5.map((t,i)=>`<div style="display:flex;gap:8px;margin-bottom:2px;"><span style="font-weight:700;min-width:18px;color:var(--navy);">${i+1}.</span><span>${t}</span></div>`).join('')}
@@ -380,7 +397,7 @@ function buildPermit(f,p,mgr3,role,status,canEdit){
     <p style="font-size:12px;margin-bottom:6px;">본 작업허가서와 연관된 모든 작업이 종결되었으며, 해당 문서들을 수령하였다.</p>
     ${mkSig('s10',canActive)}
   </div></div>`;
-  return p1+p2;
+  return p1+p1b+p2;
 }
 </script>
 <script>
